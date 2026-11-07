@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Outer Aurora Focus Ring -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M54,28A26,26 0 1,1 28,54"
+        android:strokeWidth="5.5"
+        android:strokeColor="#2EE59D"
+        android:strokeLineCap="round" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M28,54A26,26 0 0,1 54,28"
+        android:strokeWidth="5.5"
+        android:strokeColor="#38BDF8"
+        android:strokeLineCap="round" />
+    <!-- Central Shield / Hourglass Focus Core -->
+    <path
+        android:fillColor="#2EE59D"
+        android:pathData="M54,37 L67,44 L67,56 C67,64.5 61.4,70.8 54,73.5 C46.6,70.8 41,64.5 41,56 L41,44 Z" />
+    <path
+        android:fillColor="#08171C"
+        android:pathData="M54,44 L54,54 L60,58"
+        android:strokeWidth="3.2"
+        android:strokeColor="#08171C"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

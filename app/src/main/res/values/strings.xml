@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">RegainFocus</string>
+    <string name="accessibility_service_label">RegainFocus Distraction Shield</string>
+    <string name="accessibility_service_description">Used exclusively during user-initiated focus sessions and daily app limits to detect when a selected distracting app or short-form video feed opens and display the Focus Shield. All checks run 100% locally on your device; no screen text, passwords, or personal data are read, stored, or transmitted.</string>
+    <string name="device_admin_label">RegainFocus Strict Enforcement</string>
+    <string name="device_admin_description">Enables optional Device Admin protection and Mode B Device Owner policies (package suspension, Lock Task pinning, and uninstall protection) during active strict focus sessions.</string>
+</resources>

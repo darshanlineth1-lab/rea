@@ -48,6 +48,10 @@ docs/.vitepress/dist/
 .DS_Store
 Thumbs.db
 
+# Android / Gradle local cache
+.gradle/
+local.properties
+
 # Local reference sources and analysis artifacts
 /_reference/
 /experiments/analysis-efficiency/
