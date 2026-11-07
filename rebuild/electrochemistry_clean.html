@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Electrochemistry — Recreated Clean Digital Version</title>
+<style>
+  @page { size: A4 portrait; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Georgia", "Times New Roman", serif;
+    font-size: 11pt;
+    line-height: 1.45;
+    color: #1a1a1a;
+    background: #fff;
+  }
+  .page {
+    width: 210mm;
+    height: 297mm;
+    padding: 14mm 14mm 14mm 14mm;
+    position: relative;
+    page-break-after: always;
+    overflow: hidden;
+  }
+  /* Footer watermark */
+  .page-footer {
+    position: absolute;
+    bottom: 6mm; left: 14mm; right: 14mm;
+    text-align: center;
+    font-size: 9pt; color: #2a5fa8;
+    font-weight: bold; letter-spacing: 0.5pt;
+    border-top: 1pt solid #2a5fa8;
+    padding-top: 2pt;
+  }
+  /* Header banner */
+  .chapter-banner {
+    background: linear-gradient(135deg, #2a5fa8 0%, #1a3a6e 100%);
+    color: #fff;
+    padding: 6pt 8pt;
+    border-radius: 3pt;
+    margin-bottom: 6pt;
+  }
+  .chapter-banner h1 {
+    font-family: "Segoe UI", "Calibri", sans-serif;
+    font-size: 18pt; font-weight: 800; letter-spacing: 1pt;
+    text-transform: none;
+  }
+  .chapter-banner .sub {
+    font-size: 9pt; opacity: 0.9; margin-top: 1pt;
+  }
+  h2.section-num {
+    display: inline-flex; align-items: center; gap: 6pt;
+    background: #e8f0fe; color: #1a3a6e;
+    padding: 3pt 6pt; border-radius: 3pt;
+    font-family: "Segoe UI", sans-serif; font-size: 12pt; font-weight: 700;
+    margin-top: 10pt; margin-bottom: 4pt;
+  }
+  h2.section-num .num-box {
+    background: #2a5fa8; color: #fff; padding: 1pt 5pt; border-radius: 2pt; font-size: 10pt;
+  }
+  h3.sub-section {
+    font-family: "Segoe UI", sans-serif; font-size: 11.5pt; font-weight: 700;
+    color: #1a3a6e; margin: 8pt 0 3pt 0; border-left: 3pt solid #2a5fa8; padding-left: 6pt;
+  }
+  p { text-align: justify; margin-bottom: 3pt; }
+  .highlight-box {
+    background: #fff8e1; border-left: 4pt solid #f0c040;
+    padding: 6pt 8pt; border-radius: 0 4pt 4pt 0; margin: 6pt 0;
+    font-size: 10pt;
+  }
+  .formula-box {
+    background: #f4f6fb; border: 1pt solid #d0d8e8; border-radius: 4pt;
+    padding: 6pt 8pt; margin: 5pt 0; text-align: center; font-size: 10.5pt;
+  }
+  table {
+    width: 100%; border-collapse: collapse; font-size: 9pt; margin: 6pt 0;
+  }
+  table thead th {
+    background: #2a5fa8; color: #fff; padding: 4pt 3pt; text-align: center; font-weight: 600; font-family: sans-serif;
+  }
+  table td, table th { border: 0.75pt solid #b0bdd8; padding: 3pt 4pt; text-align: center; vertical-align: middle; }
+  table tbody tr:nth-child(even) { background: #f6f9fc; }
+  .two-col { display: flex; gap: 8pt; }
+  .two-col > div { flex: 1; }
+  .center-img { text-align: center; margin: 6pt 0; }
+  .center-img img { max-width: 100%; max-height: 60mm; }
+  .label { font-size: 9pt; color: #555; text-align: center; margin-top: 2pt; }
+  .small { font-size: 9pt; }
+  .note { font-size: 9pt; color: #666; font-style: italic; }
+  .badge { display: inline-block; background: #2a5fa8; color: #fff; font-family: sans-serif; font-weight: 700; padding: 1pt 4pt; border-radius: 3pt; font-size: 9pt; }
+  ul.list-disc { list-style: disc inside; padding-left: 10pt; }
+  ol.list-num { padding-left: 14pt; }
+  .answer-key-box {
+    background: #e8f4fd; border: 1.5pt solid #2a5fa8; border-radius: 4pt; padding: 8pt; margin-top: 6pt;
+  }
+  .mcq-num { color: #2a5fa8; font-weight: 700; }
+  .approx { color: #c03020; font-size: 9pt; font-style: italic; }
+  .unclear { color: #c03020; font-weight: bold; }
+  /* Page number top right */
+  .page-num-top {
+    position: absolute; top: 5mm; right: 14mm; font-size: 9pt; color: #666; font-family: sans-serif;
+  }
+</style>
+</head>
+<body>
+
+<!-- ======================= PAGE 1 (Cover / Chapter Intro) ======================= -->
+<div class="page">
+  <div class="page-num-top">Chapter 02</div>
+  <div style="margin-top: 8mm;">
+    <div class="chapter-banner">
+      <h1>ELECTROCHEMISTRY</h1>
+      <div class="sub">NCERT Topicwise Analysis of Previous Years' NEET | JEE Main Questions</div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <table>
+          <thead><tr><th>NCERT Topic</th><th>No. of Questions</th></tr></thead>
+          <tbody>
+            <tr><td>2.1 Electrochemical Cells</td><td>— — —</td></tr>
+            <tr><td>2.2 Galvanic Cells</td><td>— — —</td></tr>
+            <tr><td>2.3 Nernst Equation</td><td>— — —</td></tr>
+            <tr><td>2.4 Conductance of Electrolytic Solutions</td><td>— — —</td></tr>
+            <tr><td>2.5 Electrolytic Cells and Electrolysis</td><td>— 6 2</td></tr>
+            <tr><td>2.6 Batteries</td><td>— — —</td></tr>
+            <tr><td>2.7 Fuel Cells</td><td>— — —</td></tr>
+            <tr><td>2.8 Corrosion</td><td>— 1 —</td></tr>
+          </tbody>
+        </table>
+        <table style="margin-top:4pt;">
+          <thead style="background:#1a6e3e;">
+            <tr><th>Topic</th><th>2025 (NEET)</th><th>2025 (JEE)</th><th>2024 (NEET)</th><th>2024 (JEE)</th><th>2023 (NEET)</th><th>2023 (JEE)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Assertion &amp; Reason Based Questions</td><td>—</td><td>—</td><td>3</td><td>—</td><td>—</td><td>—</td></tr>
+            <tr><td>Statement Based Questions</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+            <tr><td>Matching Type Questions</td><td>—</td><td>—</td><td>1</td><td>—</td><td>1</td><td>—</td></tr>
+            <tr><td>Numerical Value Type Questions</td><td>—</td><td>—</td><td>—</td><td>—</td><td>20</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h3 style="font-family:sans-serif;font-weight:700;color:#1a3a6e;">3 Years' Weightage</h3>
+        <!-- Approximate pie charts recreated as simple SVG bars -->
+        <svg width="160" height="90" viewBox="0 0 160 90" style="margin:4pt 0;">
+          <circle cx="60" cy="35" r="22" fill="#2a5fa8"/>
+          <path d="M60 35 L60 13 A22 22 0 0 1 82 35 z" fill="#1a3a6e"/>
+          <text x="60" y="39" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold">62%</text>
+          <text x="40" y="65" font-size="7">NEET 2023→2025</text>
+          <text x="90" y="35" font-size="8" fill="#2a5fa8">2023: 62%</text>
+          <text x="90" y="45" font-size="8" fill="#2a5fa8">2024: 25%</text>
+          <text x="90" y="55" font-size="8" fill="#2a5fa8">2025: 13%</text>
+        </svg>
+        <svg width="160" height="90" viewBox="0 0 160 90" style="margin:2pt 0;">
+          <circle cx="60" cy="35" r="22" fill="#2a5fa8"/>
+          <path d="M60 35 L60 13 A22 22 0 0 1 82 35 z" fill="#1a3a6e"/>
+          <text x="60" y="39" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold">37%</text>
+          <text x="40" y="65" font-size="7">JEE Main 2023→2025</text>
+          <text x="90" y="35" font-size="8" fill="#2a5fa8">2023: 32%</text>
+          <text x="90" y="45" font-size="8" fill="#2a5fa8">2024: 37%</text>
+          <text x="90" y="55" font-size="8" fill="#2a5fa8">2025: 31%</text>
+        </svg>
+      </div>
+    </div>
+
+    <div style="margin-top:8pt; border-top:2pt solid #2a5fa8; padding-top:6pt;">
+      <h2 class="section-num"><span class="num-box">2.0</span> Introduction</h2>
+      <p><strong>Electrochemistry</strong> is the study of production of electricity from energy released during spontaneous chemical reactions and the use of electrical energy to bring about non-spontaneous chemical transformations.</p>
+
+      <h2 class="section-num"><span class="num-box">2.1</span> Electrochemical Cells</h2>
+      <p>▶ The device which converts the chemical energy liberated during the chemical reaction to electrical energy is called <strong>electrochemical cell</strong>. These are also called <strong>galvanic or voltaic cell</strong> e.g., Daniel cell.</p>
+
+      <h3 class="sub-section">2.2 Galvanic Cells</h3>
+      <p>▶ In this device, the Gibbs energy of the spontaneous redox reaction is converted into electrical work which may be used for running a motor or other electrical gadgets like heater, fan, geyser, etc.</p>
+      <p>▶ An electrochemical cell consists of two compartments known as half cells. A half cell consists of a metal rod (called electrode) dipped into solution of its salt called electrolyte.</p>
+      <p>▶ The two half cells are connected by a metallic wire through a voltmeter and a key, and electrolyte of the two half cells, are connected internally through a salt bridge. Salt bridge completes the electrical circuit and maintains the electrical neutrality of electrolytes.</p>
+
+      <div class="center-img" style="margin-top:6pt;">
+        <svg width="420" height="150" viewBox="0 0 420 150" style="border:1pt solid #ccc; border-radius:4pt; padding:6pt;">
+          <text x="210" y="12" text-anchor="middle" font-size="9" font-weight="bold" fill="#1a3a6e">Daniel Cell (Galvanic Cell)</text>
+          <!-- Beaker 1 -->
+          <rect x="20" y="35" width="80" height="70" rx="6" fill="#e6f4fa" stroke="#2a5fa8" stroke-width="1.5"/>
+          <text x="60" y="28" text-anchor="middle" font-size="7" fill="#333">Solution containing</text>
+          <text x="60" y="36" text-anchor="middle" font-size="7" fill="#333">salt of zinc</text>
+          <rect x="45" y="55" width="6" height="35" fill="#777" stroke="#333"/>
+          <text x="38" y="78" font-size="7" fill="#333">Zn</text>
+          <text x="60" y="105" text-anchor="middle" font-size="7" fill="#333">ZnSO₄</text>
+          <text x="60" y="120" text-anchor="middle" font-size="7" fill="#1a6e3e">Anode (–ve)</text>
+          <!-- Salt bridge -->
+          <rect x="115" y="40" width="20" height="55" rx="8" fill="#fff4e6" stroke="#e6a817" stroke-width="1"/>
+          <text x="125" y="32" text-anchor="middle" font-size="6" fill="#e6a817">Salt bridge</text>
+          <!-- Beaker 2 -->
+          <rect x="170" y="35" width="80" height="70" rx="6" fill="#e6f4fa" stroke="#2a5fa8" stroke-width="1.5"/>
+          <text x="210" y="28" text-anchor="middle" font-size="7" fill="#333">Solution containing</text>
+          <text x="210" y="36" text-anchor="middle" font-size="7" fill="#333">salt of copper</text>
+          <rect x="210" y="55" width="6" height="35" fill="#b87333" stroke="#8a4a1c"/>
+          <text x="190" y="78" font-size="7" fill="#8a4a1c">Cu</text>
+          <text x="210" y="105" text-anchor="middle" font-size="7" fill="#333">CuSO₄</text>
+          <text x="210" y="120" text-anchor="middle" font-size="7" fill="#1a6e3e">Cathode (+ve)</text>
+          <!-- Circuit -->
+          <line x1="54" y1="55" x2="54" y2="30" stroke="#333" stroke-width="1"/>
+          <line x1="54" y1="30" x2="216" y2="30" stroke="#333" stroke-width="1"/>
+          <line x1="216" y1="30" x2="216" y2="55" stroke="#333" stroke-width="1"/>
+          <circle cx="135" cy="30" r="4" fill="#fff" stroke="#333" stroke-width="0.5"/>
+          <text x="135" y="34" text-anchor="middle" font-size="5" fill="#333">A</text>
+          <text x="70" y="22" font-size="7" fill="#333">Electron flow</text>
+          <line x1="90" y1="22" x2="160" y2="22" stroke="#333" stroke-width="0.5" marker-end="url(#arrow)"/>
+        </svg>
+        <p class="label">Fig. (a) Galvanic cell — Zn(s) | Zn²⁺(aq) || Cu²⁺(aq) | Cu(s)</p>
+      </div>
+
+      <p><strong>Cell reaction:</strong> Zn(s) + Cu²⁺(aq) → Zn²⁺(aq) + Cu(s)</p>
+      <p>When Eₑₓₜ = 1.1 V, electrons flow from Zn rod to Cu rod; hence current flows from Cu to Zn. Zn dissolves at anode and copper deposits at cathode.</p>
+    </div>
+  </div>
+  <div class="page-footer">Electrochemistry &nbsp;|&nbsp; Team Kohinoor &nbsp;|&nbsp; Page (Cover / 30)</div>
+</div>
+
+<!-- ======================= PAGE 2 (Text pages 30-31 combined) ======================= -->
+<div class="page">
+  <div class="page-num-top">30 — 31</div>
+  <h2 class="section-num"><span class="num-box">2.1</span> Electrochemical Cells (contd.)</h2>
+
+  <p>The cell which converts chemical energy liberated during the redox reaction to electrical energy is called <strong>galvanic cell</strong>. It has potential of 1.1 volt when concentration of Zn²⁺ and Cu²⁺ ions is unity (1 mol dm⁻³). Such a device is called a galvanic or a voltaic cell.</p>
+
+  <div style="background:#e8f0fe;padding:6pt;border-radius:4pt;margin:6pt 0;">
+    <strong>Electrolytic cell :</strong> It is a device which converts electrical energy into chemical energy. If an external opposite potential is applied in the galvanic cell (Fig. (a)) and increased slowly, we find that the reaction continues to take place till the opposing voltage reaches the value 1.1 V [Fig. (b)] where the reaction stops altogether and no current flows through the cell. Any further increase in the external potential again starts the reaction but in the opposite direction [Fig. (c)]. It now functions as an electrolytic cell.
+  </div>
+
+  <h3 class="sub-section">Functioning of Daniell cell when external voltage Eₑₓₜ opposing the cell potential is applied</h3>
+  <div class="center-img">
+    <svg width="500" height="160" viewBox="0 0 500 160">
+      <!-- Figures (a), (b), (c) side by side -->
+      <text x="70" y="14" text-anchor="middle" font-size="9" font-weight="bold">(a) Eₑₓₜ &lt; 1.1 V</text>
+      <text x="250" y="14" text-anchor="middle" font-size="9" font-weight="bold">(b) Eₑₓₜ = 1.1 V</text>
+      <text x="430" y="14" text-anchor="middle" font-size="9" font-weight="bold">(c) Eₑₓₜ &gt; 1.1 V</text>
+      <!-- (a) -->
+      <rect x="15" y="25" width="110" height="85" rx="6" fill="#e6f4fa" stroke="#2a5fa8" stroke-width="1"/>
+      <rect x="40" y="50" width="6" height="35" fill="#777" stroke="#333"/>
+      <rect x="80" y="50" width="6" height="35" fill="#b87333" stroke="#8a4a1c"/>
+      <text x="30" y="75" font-size="8">ZnSO₄</text>
+      <text x="105" y="75" font-size="8">CuSO₄</text>
+      <line x1="43" y1="50" x2="43" y2="15" stroke="#333" stroke-width="1"/>
+      <line x1="83" y1="50" x2="83" y2="15" stroke="#333" stroke-width="1"/>
+      <line x1="43" y1="15" x2="83" y2="15" stroke="#333" stroke-width="1"/>
+      <circle cx="63" cy="15" r="4" fill="#fff" stroke="#333" stroke-width="0.5"/>
+      <text x="63" y="19" text-anchor="middle" font-size="6">A</text>
+      <text x="63" y="130" text-anchor="middle" font-size="7">(i) Electrons flow from Zn to Cu rod</text>
+      <text x="63" y="138" text-anchor="middle" font-size="7">(ii) Zn dissolves at anode</text>
+      <text x="63" y="146" text-anchor="middle" font-size="7">(iii) Copper deposits at cathode</text>
+      <!-- (b) -->
+      <rect x="185" y="25" width="110" height="85" rx="6" fill="#fff8e1" stroke="#e6a817" stroke-width="1.5"/>
+      <rect x="215" y="50" width="6" height="35" fill="#777" stroke="#333"/>
+      <rect x="245" y="50" width="6" height="35" fill="#b87333" stroke="#8a4a1c"/>
+      <text x="205" y="75" font-size="8">ZnSO₄</text>
+      <text x="275" y="75" font-size="8">CuSO₄</text>
+      <line x1="218" y1="50" x2="218" y2="15" stroke="#333" stroke-width="1"/>
+      <line x1="248" y1="50" x2="248" y2="15" stroke="#333" stroke-width="1"/>
+      <line x1="218" y1="15" x2="248" y2="15" stroke="#333" stroke-width="1"/>
+      <circle cx="233" cy="15" r="4" fill="#fff" stroke="#333" stroke-width="0.5"/>
+      <text x="233" y="19" text-anchor="middle" font-size="6">V</text>
+      <text x="55" y="145" font-size="7" fill="#c03020">I = 0</text>
+      <text x="233" y="130" text-anchor="middle" font-size="7">(i) No flow of electrons</text>
+      <text x="233" y="138" text-anchor="middle" font-size="7">(ii) No current</text>
+      <text x="233" y="146" text-anchor="middle" font-size="7">(iii) No chemical reaction</text>
+      <!-- (c) -->
+      <rect x="355" y="25" width="110" height="85" rx="6" fill="#ffe6e6" stroke="#d03030" stroke-width="1"/>
+      <rect x="385" y="50" width="6" height="35" fill="#777" stroke="#333"/>
+      <rect x="415" y="50" width="6" height="35" fill="#b87333" stroke="#8a4a1c"/>
+      <text x="375" y="75" font-size="8">ZnSO₄</text>
+      <text x="445" y="75" font-size="8">CuSO₄</text>
+      <line x1="388" y1="50" x2="388" y2="15" stroke="#333" stroke-width="1"/>
+      <line x1="418" y1="50" x2="418" y2="15" stroke="#333" stroke-width="1"/>
+      <line x1="388" y1="15" x2="418" y2="15" stroke="#333" stroke-width="1"/>
+      <circle cx="403" cy="15" r="4" fill="#fff" stroke="#333" stroke-width="0.5"/>
+      <text x="403" y="19" text-anchor="middle" font-size="6">A</text>
+      <text x="403" y="130" text-anchor="middle" font-size="7">(i) Electrons flow from Cu to Zn</text>
+      <text x="403" y="138" text-anchor="middle" font-size="7">(ii) Cu dissolves at anode</text>
+      <text x="403" y="146" text-anchor="middle" font-size="7">(iii) Zinc is deposited at cathode</text>
+    </svg>
+    <p class="label">Functioning of Daniell cell when external voltage Eₑₓₜ opposing cell potential is applied</p>
+  </div>
+
+  <table style="margin-top:8pt;">
+    <thead><tr><th>S.No.</th><th>Electrochemical cell (Galvanic or voltaic cell)</th><th>Electrolytic cell</th></tr></thead>
+    <tbody>
+      <tr><td>1.</td><td>It is a device which converts chemical energy into electrical energy.</td><td>It is a device which converts electrical energy into chemical energy.</td></tr>
+      <tr><td>2.</td><td>It is based upon the redox reaction which is spontaneous. i.e., ΔG = –ve</td><td>The redox reaction is non-spontaneous and takes place only when electrical energy is supplied. i.e., ΔG = +ve</td></tr>
+      <tr><td>3.</td><td>Two electrodes are usually set up in two separate beakers.</td><td>Both the electrodes are suspended in the solution of molten electrolyte in the same beaker.</td></tr>
+      <tr><td>4.</td><td>The electrolytes taken in the two beakers are different.</td><td>Only one electrolyte is taken.</td></tr>
+      <tr><td>5.</td><td>The electrodes taken are of different materials.</td><td>The electrodes taken may be of the same or different materials.</td></tr>
+      <tr><td>6.</td><td>The electrode on which oxidation takes place is called the anode (or –ve pole) and the electrode on which reduction takes place is called the cathode (or +ve pole).</td><td>The electrode which is connected to the –ve terminal of the battery is called the cathode; the cations migrate to it which gain electrons and hence, a reduction takes place; the other electrode is called the anode.</td></tr>
+      <tr><td>7.</td><td>To set up this cell, a salt bridge/porous pot is used.</td><td>No salt bridge is used in this case.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="section-num"><span class="num-box">2.2</span> Galvanic Cells (cont.)</h2>
+  <p>▶ In this device, the Gibbs energy of the spontaneous redox reaction is converted into electrical work which may be used for running a motor or other electrical gadgets like heater, fan, geyser, etc.</p>
+  <p>▶ An electrochemical cell consists of two compartments known as half cells. A half cell consists of a metal rod (called electrode) dipped into solution of its salt called electrolyte.</p>
+  <p>▶ The two half cells are connected by a metallic wire through a voltmeter and a key, and electrolyte of the two half cells, are connected internally through a salt bridge. Salt bridge completes the electrical circuit and maintains the electrical neutrality of electrolytes.</p>
+
+  <p><strong>Note:</strong> The cell reaction of the galvanic cell is:</p>
+  <div class="formula-box">Cu(s) + Cu²⁺(aq) → Cu(s) + Cu²⁺(aq) <span style="color:#c03020;">(incorrect — should be Zn + Cu²⁺)</span></div>
+  <p class="approx">[Approximate / unclear: handwritten annotation near reaction. Original appears to say: Zn(s) + Cu²⁺(aq) → Zn²⁺(aq) + Cu(s)]</p>
+  <p>When Eₑₓₜ = 1.1 V, electrons flow from Zn rod to Cu rod; hence current flows from Cu to Zn. Zn dissolves at anode and copper deposits at cathode.</p>
+  <div class="page-footer">Electrochemistry &nbsp;|&nbsp; Team Kohinoor &nbsp;|&nbsp; Page 30 — 31</div>
+</div>
+
+<!-- ======================= PAGE 3 (Text page 31 contd) ======================= -->
+<div class="page">
+  <div class="page-num-top">31 (contd.)</div>
+  <h2 class="section-num"><span class="num-box">2.1 — 2.2</span> Half-Cell, Anode, Cathode</h2>
+
+  <p>▶ <strong>Anode :</strong> The half cell of a galvanic cell in which oxidation takes place is called anode. It has a negative potential with respect to the solution. Hence, denoted by (–) ve sign. It is written in the left side in the cell representation.</p>
+  <p>▶ <strong>Cathode :</strong> The half cell of galvanic cell in which reduction takes place is called cathode. It has positive potential with respect to the solution. Hence, denoted by (+) ve sign. It is written in the right side in the cell representation.</p>
+
+  <h3 class="sub-section">Electrode Potential and Standard Electrode Potential</h3>
+  <p>▶ <strong>Electrode potential :</strong> The tendency of an electrode to get oxidised (i.e., lose electrons) or it is the tendency of an electrode to get reduced (i.e., gain electrons).</p>
+  <p>▶ <strong>Reduction potential :</strong> The potential difference set up between metal and its ions in the solution or it is the tendency of an electrode to get oxidised/reduced.</p>
+  <p>▶ According to IUPAC convention, <strong>standard reduction potential</strong> is called standard electrode potential.</p>
+  <p>▶ <strong>Cell potential :</strong> The potential difference between the two electrodes of a galvanic cell is called cell potential. It is different in electrodes and anode.</p>
+  <div class="formula-box">ΔE = E₍cathode₎ – E₍anode₎ &nbsp;&nbsp; (Eₘf) <br>Electromotive force : The cell potential when no current is drawn through the cell is called electromotive force (emf) of the cell.</div>
+
+  <p>For a cell reaction to be spontaneous, E₍cell₎ must be positive.</p>
+  <p>This is illustrated by the following example :</p>
+  <div class="formula-box">
+    Cell reaction : Cu(s) + 2Ag⁺(aq) → Cu²⁺(aq) + 2Ag(s) &nbsp;&nbsp; ... (i)<br>
+    Cathode (reduction half reaction) : 2Ag⁺(aq) + 2e⁻ → 2Ag(s) &nbsp;&nbsp; ... (ii)<br>
+    Anode (oxidation half reaction) : Cu(s) → Cu²⁺(aq) + 2e⁻ &nbsp;&nbsp; ... (iii)<br>
+    It can be seen that the sum of (ii) and (iii) leads to overall reaction (i) in the cell and that silver electrode acts as a cathode and copper electrode acts as an anode.
+  </div>
+
+  <div class="highlight-box">
+    <strong>Salt bridge</strong> provides cations and anions of almost same ionic conductance and removes the liquid junction potential which arises because of the difference in the rates of diffusion of cations and anions from more concentrated solution to less concentrated solution.
+  </div>
+
+  <h2 class="section-num"><span class="num-box">2.3</span> Measurement of Electrode Potential</h2>
+  <p>▶ The absolute potential of a half cell cannot be determined. Only the difference between the two half cell potentials can be measured.</p>
+  <h3 class="sub-section">Standard Hydrogen Electrode (SHE)</h3>
+  <p>▶ It is used as reference electrode whose electrode potential is taken as 0.00 V at 298 K. It is often constructed through 1 M H⁺ ions solution at 1 atm and 298 K. It consists of inert Pt electrode coated with platinum black.</p>
+  <p>For the cell, H⁺(aq) + e⁻ → ½ H₂(g) ; E° = 0.00 V</p>
+  <p>The half cell is represented as: Pt(s) | H₂(g) (1 bar) | H⁺(aq) (1 M)</p>
+  <p>The half cell whose potential is to be measured is made cathode. Standard hydrogen electrode is made anode and a galvanic cell is constructed.</p>
+
+  <div class="center-img">
+    <svg width="350" height="130" viewBox="0 0 350 130">
+      <rect x="140" y="15" width="70" height="90" rx="4" fill="#e6f4fa" stroke="#2a5fa8" stroke-width="1.5"/>
+      <rect x="160" y="30" width="30" height="55" rx="2" fill="#fff" stroke="#999" stroke-width="0.5"/>
+      <rect x="165" y="40" width="20" height="8" fill="#ddd" stroke="#666"/>
+      <text x="175" y="36" text-anchor="middle" font-size="7" fill="#333">1 M HCl</text>
+      <line x1="175" y1="30" x2="175" y2="10" stroke="#333" stroke-width="1"/>
+      <text x="175" y="6" text-anchor="middle" font-size="7" fill="#333">H₂(g) at 1 bar</text>
+      <line x1="175" y1="85" x2="175" y2="105" stroke="#333" stroke-width="1"/>
+      <text x="175" y="122" text-anchor="middle" font-size="7" fill="#333">Standard Hydrogen Electrode (SHE)</text>
+      <text x="100" y="70" font-size="8" fill="#333">Finely divided platinum</text>
+      <text x="100" y="78" font-size="8" fill="#333">coated on platinum foil</text>
+      <line x1="160" y1="60" x2="140" y2="60" stroke="#333" stroke-width="1" marker-end="url(#arrow)"/>
+      <text x="100" y="55" font-size="8" fill="#333">Solution containing</text>
+      <text x="100" y="63" font-size="8" fill="#333">salt of zinc</text>
+      <rect x="30" y="45" width="60" height="50" rx="4" fill="#f6f9fc" stroke="#2a5fa8" stroke-width="1"/>
+      <rect x="50" y="65" width="6" height="20" fill="#777" stroke="#333"/>
+      <text x="30" y="108" text-anchor="middle" font-size="7">Zn</text>
+      <line x1="90" y1="55" x2="140" y2="55" stroke="#333" stroke-width="1"/>
+      <text x="115" y="50" text-anchor="middle" font-size="6" fill="#333">Current flow</text>
+    </svg>
+  </div>
+
+  <p>▶ The electrode at which reduction occurs with respect to SHE has positive reduction potential, while the electrode at which oxidation occurs with respect to SHE has negative reduction potential.</p>
+  <p>e.g., (i) For the cell : Pt(s) | H₂(g) (1 bar) | H⁺(aq) (1 M) || Cu²⁺(aq) (1 M) | Cu(s)</p>
+  <p>E°cell = 0.34 V ∴ E°R = 0.34 V</p>
+  <p>Standard electrode potential of Cu²⁺/Cu is positive which indicates that Cu²⁺ is reduced more easily than H⁺ ion. i.e., hydrogen can reduce copper ions.</p>
+
+  <div class="highlight-box">
+    <strong>Note:</strong> The standard electrode potential is taken positive if the half cell is on the right side of SHE; and it is taken negative if the half cell is on the left side of SHE.
+  </div>
+
+  <div class="page-footer">Electrochemistry &nbsp;|&nbsp; Team Kohinoor &nbsp;|&nbsp; Page 31</div>
+</div>
+
+<!-- ======================= PAGE 4 (Text page 32) ======================= -->
+<div class="page">
+  <div class="page-num-top">32</div>
+  <h2 class="section-num"><span class="num-box">2.3 — 2.4</span> Electrochemical Series &amp; Nernst Equation</h2>
+
+  <p>▶ (ii) For the cell : Pt(s) | H₂(g) (1 bar) | H⁺(aq) (1 M) || Zn²⁺(aq) (1 M) | Zn(s)</p>
+  <p>E°cell = –0.76 V or E°R = –0.76 V</p>
+  <p>Standard electrode potential of Zn²⁺/Zn is negative which indicates that Zn can reduce hydrogen ions.</p>
+
+  <h2 class="section-num" style="margin-top:8pt;"><span class="num-box">2.4</span> Electrochemical Series</h2>
+  <p>▶ When various electrodes are arranged in order of increasing or decreasing values of their standard reduction potentials we get a series called <strong>electrochemical series</strong>.</p>
+
+  <table>
+    <thead>
+      <tr><th>Reduction half reaction</th><th>→</th><th>Standard reduction potential E° (in volt)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Li⁺ + e⁻ → Li(s)</td><td>→</td><td>–3.05</td></tr>
+      <tr><td>K⁺ + e⁻ → K(s)</td><td>→</td><td>–2.93</td></tr>
+      <tr><td>Ba²⁺ + 2e⁻ → Ba(s)</td><td>→</td><td>–2.90</td></tr>
+      <tr><td>Ca²⁺ + 2e⁻ → Ca(s)</td><td>→</td><td>–2.87</td></tr>
+      <tr><td>Na⁺ + e⁻ → Na(s)</td><td>→</td><td>–2.71</td></tr>
+      <tr><td>Mg²⁺ + 2e⁻ → Mg(s)</td><td>→</td><td>–2.36</td></tr>
+      <tr><td>Al³⁺ + 3e⁻ → Al(s)</td><td>→</td><td>–1.66</td></tr>
+      <tr><td>Mn²⁺ + 2e⁻ → Mn(s)</td><td>→</td><td>–1.18</td></tr>
+      <tr><td>2H₂O(l) + 2e⁻ → H₂(g) + 2OH⁻(aq)</td><td>→</td><td>–0.83</td></tr>
+      <tr><td>Zn²⁺ + 2e⁻ → Zn(s)</td><td>→</td><td>–0.76</td></tr>
+      <tr><td>Cr³⁺ + 3e⁻ → Cr(s)</td><td>→</td><td>–0.74</td></tr>
+      <tr><td>Fe²⁺ + 2e⁻ → Fe(s)</td><td>→</td><td>–0.44</td></tr>
+      <tr><td>Cd²⁺ + 2e⁻ → Cd(s)</td><td>→</td><td>–0.40</td></tr>
+      <tr><td>Co²⁺ + 2e⁻ → Co(s)</td><td>→</td><td>–0.28</td></tr>
+      <tr><td>Ni²⁺ + 2e⁻ → Ni(s)</td><td>→</td><td>–0.25</td></tr>
+      <tr><td>Sn²⁺ + 2e⁻ → Sn(s)</td><td>→</td><td>–0.14</td></tr>
+      <tr><td>Pb²⁺ + 2e⁻ → Pb(s)</td><td>→</td><td>–0.13</td></tr>
+      <tr><td>2H⁺ + 2e⁻ → H₂(g)</td><td>→</td><td>0.00</td></tr>
+      <tr><td>Sn⁴⁺ + 2e⁻ → Sn²⁺</td><td>→</td><td>+0.15</td></tr>
+      <tr><td>Cu²⁺ + 2e⁻ → Cu(s)</td><td>→</td><td>+0.34</td></tr>
+      <tr><td>Cu⁺ + e⁻ → Cu(s)</td><td>→</td><td>+0.52</td></tr>
+      <tr><td>I₂ + 2e⁻ → 2I⁻</td><td>→</td><td>+0.54</td></tr>
+      <tr><td>Fe³⁺ + e⁻ → Fe²⁺</td><td>→</td><td>+0.77</td></tr>
+      <tr><td>Ag⁺ + e⁻ → Ag(s)</td><td>→</td><td>+0.80</td></tr>
+      <tr><td>Br₂ + 2e⁻ → 2Br⁻</td><td>→</td><td>+1.09</td></tr>
+      <tr><td>O₂(g) + 4H⁺(aq) + 4e⁻ → 2H₂O</td><td>→</td><td>+1.23</td></tr>
+      <tr><td>Cl₂ + 2e⁻ → 2Cl⁻</td><td>→</td><td>+1.36</td></tr>
+      <tr><td>Au³⁺ + 3e⁻ → Au(s)</td><td>→</td><td>+1.40</td></tr>
+      <tr><td>Co³⁺ + e⁻ → Co²⁺</td><td>→</td><td>+1.81</td></tr>
+      <tr><td>F₂(g) + 2e⁻ → 2F⁻</td><td>→</td><td>+2.87</td></tr>
+    </tbody>
+  </table>
+  <p class="label">Standard reduction potentials at 298 K (Electrochemical Series)</p>
+  <p class="small">▶ <strong>Increasing strength of reducing agent →</strong></p>
+  <p class="small">▶ <strong>Increasing strength of oxidising agent →</strong></p>
+
+  <h3 class="sub-section">2.3 Nernst Equation</h3>
+  <p>▶ <strong>Nernst equation for the electrode reaction:</strong> Mⁿ⁺(aq) + ne⁻ → M(s)</p>
+  <div class="formula-box">
+    Eₘⁿ⁺/ₘ = E°ₘⁿ⁺/ₘ – (2.303 RT / nF) log [C]°[D]ᵈ / [A]ᵃ[B]ᵇ = E°ₘⁿ⁺/ₘ – (0.0591 / n) log [C]°[D]ᵈ / [A]ᵃ[B]ᵇ &nbsp; at 298 K
+  </div>
+  <p>For concentration cell, EMF at 298 K is given by E_cell = (2.303 RT / nF) log (C₂/C₁) , where C₂ > C₁</p>
+
+  <h2 class="section-num"><span class="num-box">2.4</span> Conductance of Electrolytic Solutions (cont.)</h2>
+  <p>▶ <strong>Resistance, R of a conductor</strong> is directly proportional to its length (l) and inversely proportional to area of cross-section (A).</p>
+  <div class="formula-box">R ∝ l/A  or  R = ρ l/A &nbsp; where, ρ is called resistivity or specific resistance, having SI units Ω m.</div>
+  <p>The inverse of resistance, R is called <strong>conductance, G</strong>.</p>
+  <div class="formula-box">G = 1/R = 1/ρ · A/l = κ · A/l &nbsp; and the SI unit of conductance is S or ohm⁻¹ (mho).</div>
+  <div class="formula-box">κ = 1/ρ = 1/R · l/A &nbsp; where, κ is called conductivity or specific conductance, having SI unit S m⁻¹.</div>
+
+  <p><strong>Types of Substances on the Basis of Conductivity</strong></p>
+  <p>▶ <strong>Conductors :</strong> Substances which have large conductivity in the range of 10⁴ to 10⁷ S m⁻¹ are called conductors. These are intrinsic and extrinsic semiconductors.</p>
+  <p>▶ <strong>Insulators :</strong> Substances which have very low conductivity in the range of 10⁻²⁰ to 10⁻¹⁰ S m⁻¹ are called insulators. e.g., plastics, wood, coal, etc.</p>
+
+  <div class="page-footer">Electrochemistry &nbsp;|&nbsp; Team Kohinoor &nbsp;|&nbsp; Page 32</div>
+</div>
+
+<!-- ======================= PAGE 5 (Text page 33 — Nernst / Gibbs / Conductance) ======================= -->
+<div class="page">
+  <div class="page-num-top">33</div>
+  <h2 class="section-num"><span class="num-box">2.3 — 2.4</span> Nernst Equation &amp; Gibbs Energy</h2>
+
+  <p><strong>Nernst equation for general electrochemical reaction :</strong> aA + bB → cC + dD</p>
+  <div class="formula-box">
+    E_cell = E°_cell – (2.303 RT / nF) log ([C]ᶜ[D]ᵈ / [A]ᵃ[B]ᵇ)<br>
+    E°_cell = E°_cathode – E°_anode (concentrations of pure solids are taken as unity)
+  </div>
+  <p><strong>Equilibrium constant from Nernst equation :</strong> At equilibrium, E_cell = 0 ∴ E°_cell = (2.303 RT / nF) log K_c</p>
+  <div class="formula-box">
+    E_cell = 0 ∴ E°_cell = (2.303 RT / nF) log K_c &nbsp; → &nbsp; K_c = 10^(nE°_cell / 0.0591) &nbsp; at 298 K
+  </div>
+
+  <h3 class="sub-section">Electrochemical cell and Gibbs energy of the reaction</h3>
+  <div class="formula-box">
+    ΔᵣG = –nFE_cell  or  ΔᵣG° = –nFE°_cell  or  ΔᵣG° = –RT ln K = –2.303 RT log K
+  </div>
+
+  <div class="highlight-box" style="margin-top:6pt;">
+    <strong>NEET | JEE Plus</strong> (badge-style box with extra focus points)
+  </div>
+
+  <p>▶ For concentration cell, EMF at 298 K is given by: E_cell = (2.303 RT / nF) log (C₂/C₁) , where C₂ > C₁</p>
+  <p>▶ E_cell = 0.0591 log (P₂/P₁) for gas concentration cell, Pt(H₂) | HCl | Pt(H₂) , C₂ > C₁</p>
+  <p>▶ E_cell = E°_H⁺/H₂ – 0.0591 log [H⁺] = 0 – 0.0591 (–log[H⁺]) = –0.0591 pH &nbsp; (∵ pH = –log[H⁺])</p>
+  <p>As pH of the solution increases, electrode potential of hydrogen electrode decreases.</p>
+
+  <p>▶ <strong>ΔG° = ΔG°₁ + ΔG°₂</strong> (when different number of electrons are involved)</p>
+  <p><strong>n₃E°₃ = –n₁E°₁ – n₂E°₂</strong> or <strong>n₃E°₃ = n₁E°₁ + n₂E°₂</strong> ; <strong>n₁E°₁ + n₂E°₂ / n₃</strong></p>
+  <p>If n₁ = n₂ = n₃, <strong>E°₃ = E°₁ + E°₂</strong></p>
+
+  <h3 class="sub-section">Relation between free energy and cell potential</h3>
+  <table>
+    <thead><tr><th>Type of reaction</th><th>ΔG</th><th>E</th><th>Type of cell</th></tr></thead>
+    <tbody>
+      <tr><td>Spontaneous</td><td>–ve</td><td>+ve</td><td>Galvanic</td></tr>
+      <tr><td>Non-spontaneous</td><td>+ve</td><td>–ve</td><td>Electrolytic</td></tr>
+      <tr><td>Equilibrium</td><td>0</td><td>0</td><td>Dead battery</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="section-num"><span class="num-box">2.4</span> Conductance of Electrolytic Solutions (cont.)</h2>
+  <p>▶ <strong>Resistance, R of a conductor</strong> is directly proportional to its length (l) and inversely proportional to area of cross-section (A).</p>
+  <p>The inverse of resistance, R is called <strong>conductance, G</strong>.</p>
+  <p>G = 1/R = κ A/l and the SI unit of conductance is S or ohm⁻¹ (mho).</p>
+  <p>κ = 1/ρ = 1/R · A/l &nbsp; where, κ is called conductivity or specific conductance, having SI unit S m⁻¹.</p>
+  <div class="page-footer">Electrochemistry &nbsp;|&nbsp; Team Kohinoor &nbsp;|&nbsp; Page 33</div>
+</div>
+
+<!-- ======================= PAGE 6 (Text page 34) ======================= -->
+<div class="page">
+  <div class="page-num-top">34</div>
+  <h2 class="section-num"><span class="num-box">2.4</span> Types of Conductance</h2>
+
+  <p>▶ <strong>Semiconductors :</strong> Substances which have moderate conductivity in the range of 10⁻⁶ to 10⁴ S m⁻¹ are called semiconductors. These are intrinsic and extrinsic semiconductors.</p>
+  <p>▶ <strong>Conductors :</strong> Substances which have large conductivity in the range of 10⁴ to 10⁷ S m⁻¹ are known as conductors e.g., metals and their alloys, certain non-metals like carbon black, graphite and some organic polymers.</p>
+  <p>▶ <strong>Superconductors :</strong> Materials which have zero resistivity and infinite conductivity are called superconductors e.g., metals and their alloys at very low temperature 0 to 15 K. Ceramic materials and mixed oxide behave as superconductors upto 150 K.</p>
+
+  <h3 class="sub-section">Types of Conductance &amp; Factors Affecting Electronic Conductance</h3>
+  <p>▶ <strong>Metallic or electronic conductance :</strong> Electrical conductance through metals due to movement of electrons is called electronic or metallic conductance e.g., all metals, alloys, graphite and conducting polymers.</p>
+  <p><strong>Factors affecting electronic conductance :</strong></p>
+  <ul class="list-disc">
+    <li>The nature and structure of the metal.</li>
+    <li>The number of valence electrons per atom.</li>
+    <li>Temperature : electronic conductance decreases with increasing temperature.</li>
+  </ul>
+
+  <h3 class="sub-section">Electrolytic or Ionic Conductance</h3>
+  <p>▶ The conductance of electricity by ions present in the solution or melt is called ionic or electrolytic conductance. In ionic conductance, ions carry charge from one electrode to another.</p>
+  <p><strong>Factors affecting ionic conductance :</strong></p>
+  <ul class="list-disc">
+    <li>The nature of the electrolyte added.</li>
+    <li>Size of the ions produced.</li>
+    <li>The nature and viscosity of solvent.</li>
+    <li>Solvation of the ions.</li>
+    <li>Concentration of electrolyte.</li>
+    <li>Temperature : electrolytic conductivity increases with increasing temperature because speed of ions increases.</li>
+  </ul>
+
+  <h3 class="sub-section">Measurement of Conductivity of Ionic Solutions</h3>
+  <p>▶ Conductance of an ionic solution is measured by measuring its resistance with the help of Wheatstone bridge.</p>
+  <p>First of all, cell constant of the conductivity cell is measured by measuring the resistance of solution whose conductivity is already known. The cell constant is calculated using formula, G* = κ A/R.</p>
+  <p>The conductivity cell is connected to one arm of the Wheatstone bridge containing two fixed and one variable resistance as shown. It is connected to an oscillator O and a detector P. The bridge is balanced when no current passes through the detector.</p>
+  <div class="center-img">
+    <svg width="300" height="130" viewBox="0 0 300 130">
+      <rect x="10" y="60" width="40" height="40" rx="3" fill="#e6f4fa" stroke="#2a5fa8" stroke-width="1.5"/>
+      <text x="30" y="83" text-anchor="middle" font-size="8" fill="#333">R₃</text>
+      <rect x="70" y="60" width="40" height="40" rx="3" fill="#f6f9fc" stroke="#999" stroke-width="1"/>
+      <text x="90" y="83" text-anchor="middle" font-size="8" fill="#333">R₄</text>
+      <line x1="50" y1="80" x2="70" y2="80" stroke="#333" stroke-width="1"/>
+      <line x1="110" y1="80" x2="140" y2="80" stroke="#333" stroke-width="1"/>
+      <rect x="140" y="60" width="50" height="40" rx="3" fill="#e6f4fa" stroke="#2a5fa8" stroke-width="1.5"/>
+      <text x="165" y="83" text-anchor="middle" font-size="8" fill="#333">R₁</text>
+      <rect x="210" y="60" width="50" height="40" rx="3" fill="#e6f4fa" stroke="#2a5fa8" stroke-width="1.5"/>
+      <text x="235" y="83" text-anchor="middle" font-size="8" fill="#333">R₂</text>
+      <line x1="190" y1="80" x2="210" y2="80" stroke="#333" stroke-width="1"/>
+      <line x1="50" y1="80" x2="50" y2="30" stroke="#333" stroke-width="1"/>
+      <line x1="235" y1="80" x2="235" y2="30" stroke="#333" stroke-width="1"/>
+      <line x1="50" y1="30" x2="235" y2="30" stroke="#333" stroke-width="1"/>
+      <circle cx="142" cy="30" r="8" fill="#fff" stroke="#333" stroke-width="1"/>
+      <text x="142" y="34" text-anchor="middle" font-size="7" fill="#333">O</text>
+      <text x="80" y="22" font-size="7" fill="#333">Oscillator</text>
+      <text x="200" y="22" font-size="7" fill="#333">Detector P</text>
+      <line x1="142" y1="38" x2="142" y2="60" stroke="#333" stroke-width="1" stroke-dasharray="3,2"/>
+      <text x="180" y="105" font-size="7" fill="#333">Conductivity cell (two platinum electrodes coated with black Pt)</text>
+    </svg>
+  </div>
+  <p>At equilibrium, R₁/R₂ = R₃/R₄ or R₄ = (R₃ · R₂)/R₁</p>
+  <p>Conductivity of the solution is calculated by using formula, κ = G*/R = (1/R) · (l/A) = G*/R</p>
+  <p><strong>Molar conductance Λₘ</strong> is calculated by using formula, Λₘ = κ/M , where M is molarity of solution.</p>
+
+  <h3 class="sub-section">Variation of Conductivity and Molar Conductivity with Concentration</h3>
+  <p>▶ Molar conductivity (Λₘ) is the conductance of a solution containing 1 mole of the electrolyte.</p>
+  <div class="formula-box">Λₘ = κ × 1000 / Molarity (where molarity is in mol L⁻¹) &nbsp; Units for Λₘ = S m² mol⁻¹ or S cm² mol⁻¹.</div>
+  <div class="page-footer">Electrochemistry &nbsp;|&nbsp; Team Kohinoor &nbsp;|&nbsp; Page 34</div>
+</div>
+
+<!-- ======================= PAGE 7 (Text page 35) ======================= -->
+<div class="page">
+  <div class="page-num-top">35</div>
+  <h2 class="section-num"><span class="num-box">2.4</span> Equivalent Conductivity (Λₑq)</h2>
+  <p>▶ Equivalent conductivity (Λₑq) is the conductance of a solution containing 1 g equivalent of the electrolyte.</p>
+  <div class="formula-box">Λₑq = κ × 1000 / Normality (where, normality is in eq L⁻¹) &nbsp; Units for Λₑq = S m² eq⁻¹ or S cm² eq⁻¹.</div>
+
+  <h3 class="sub-section">Variation of G, κ, Λₘ and Λₑq with dilution</h3>
+  <ul class="list-disc">
+    <li>On dilution, as no. of ions increases, conductance (G) increases.</li>
+    <li>On dilution, as no. of ions per cm³ decreases, κ decreases.</li>
+    <li>On dilution, though κ decreases but volume (V) increases much more. Hence, Λₘ or Λₑq increases because Λ = κ × V.</li>
+  </ul>
+
+  <p>When concentration approaches zero i.e., at infinite dilution, the molar conductivity is known as <strong>limiting molar conductivity (Λ°ₘ)</strong>.</p>
+  <p>Variation of Λₘ with concentration (C) :</p>
+  <p>▶ For <strong>strong electrolytes</strong>, there is only a small increase in conductance with dilution. This is because a strong electrolyte is completely dissociated in solution and so, the number of ions remains constant and on dilution, interionic attractions decreases as ions are far apart.</p>
+  <p>Λₘ increases slowly with dilution and can be represented by equation:</p>
+  <div class="formula-box">Λₘ = Λ°ₘ – A C¹ᐟ² (Debye — Hückel Onsager equation)</div>
+
+  <div class="center-img">
+    <svg width="250" height="120" viewBox="0 0 250 120">
+      <text x="125" y="10" text-anchor="middle" font-size="9" font-weight="bold" fill="#1a3a6e">Molar conductivity versus C¹ᐟ² for acetic acid</text>
+      <text x="125" y="20" text-anchor="middle" font-size="8" fill="#555">(weak electrolyte) and potassium chloride (strong electrolyte) in aqueous solutions</text>
+      <rect x="30" y="30" width="180" height="70" fill="#fff" stroke="#333" stroke-width="1"/>
+      <line x1="30" y1="30" x2="30" y2="100" stroke="#333" stroke-width="1"/>
+      <line x1="30" y1="100" x2="210" y2="100" stroke="#333" stroke-width="1"/>
+      <line x1="30" y1="70" x2="210" y2="70" stroke="#ccc" stroke-width="0.5" stroke-dasharray="2,2"/>
+      <line x1="30" y1="50" x2="210" y2="50" stroke="#ccc" stroke-width="0.5" stroke-dasharray="2,2"/>
+      <line x1="100" y1="30" x2="100" y2="100" stroke="#ccc" stroke-width="0.5" stroke-dasharray="2,2"/>
+      <line x1="160" y1="30" x2="160" y2="100" stroke="#ccc" stroke-width="0.5" stroke-dasharray="2,2"/>
+      <path d="M30 95 Q100 55 160 45 T210 35" fill="none" stroke="#2a5fa8" stroke-width="1.5"/>
+      <path d="M30 90 Q100 80 160 75 T210 70" fill="none" stroke="#e6a817" stroke-width="1.5" stroke-dasharray="3,2"/>
+      <text x="140" y="42" font-size="7" fill="#2a5fa8">CH₃COOH</text>
+      <text x="140" y="65" font-size="7" fill="#e6a817">KCl</text>
+      <text x="120" y="115" text-anchor="middle" font-size="7">C¹ᐟ² (mol/L)¹ᐟ² →</text>
+      <text x="15" y="65" text-anchor="middle" font-size="7" transform="rotate(-90 15,65)">Λₘ (S cm² mol⁻¹)</text>
+    </svg>
+    <p class="label">Graph of Λₘ vs √C for acetic acid (weak electrolyte) and potassium chloride (strong electrolyte)</p>
+  </div>
+
+  <p>Plot of Λₘ against C¹ᐟ² is a straight line with intercept equal to Λ°ₘ and slope equal to '–A'.</p>
+  <p>Thus, Λₘ decreases linearly with √C , when C = 0, Λₘ = Λ°ₘ and Λ°ₘ can be determined experimentally.</p>
+  <p>▶ For <strong>weak electrolytes</strong>, there is a very large increase in conductance with dilution especially near infinite dilution as no. of ions increases.</p>
+
+  <p>▶ <strong>Kohlrausch law of independent migration of ions :</strong> Λ°ₘ = ν₊λ°₊ + ν₋λ°₋ where λ°₊ and λ°₋ are the limiting molar conductivities of the cation and anion respectively and ν₊ and ν₋ are stoichiometric no. of cations and anions respectively in one formula unit of the electrolyte.</p>
+  <p>For example, limiting molar conductivity of sodium chloride is given as Λ°ₘ(NaCl) = λ°Na⁺ + λ°Cl⁻.</p>
+  <p>▶ For weak electrolyte, α = Λₘ / Λ°ₘ and Kₐ = (C α²) / (1 – α) = (C Λₘ²) / (Λ°ₘ (Λ°ₘ – Λₘ))</p>
+
+  <h3 class="sub-section">Conductance in Electrolytic Solutions</h3>
+  <table>
+    <thead><tr><th>Property</th><th>Formula</th><th>Units</th><th>Effect of dilution</th></tr></thead>
+    <tbody>
+      <tr><td>Conductance (G)</td><td>1/R = κ A / l = κ A / l</td><td>Ohm⁻¹ (Ω⁻¹) or Siemens (S)</td><td>Increases as larger number of ions are produced.</td></tr>
+      <tr><td>Specific conductance (κ) or conductivity</td><td>1/ρ or G l/A</td><td>Ohm⁻¹ cm⁻¹ or S m⁻¹</td><td>Decreases as number of ions per cm³ decreases.</td></tr>
+      <tr><td>Equivalent conductivity (Λₑq)</td><td>κ × V or κ × 1000 / N</td><td>Ω⁻¹ cm² eq⁻¹ or S m² eq⁻¹</td><td>Increases with dilution due to large increase in V.</td></tr>
+      <tr><td>Molar conductivity (Λₘ)</td><td>κ × V or κ × 1000 / M</td><td>Ω⁻¹ cm² mol⁻¹ or S m² mol⁻¹</td><td>Increases with dilution due to large increase in V.</td></tr>
+    </tbody>
+  </table>
+  <div class="page-footer">Electrochemistry &nbsp;|&nbsp; Team Kohinoor &nbsp;|&nbsp; Page 35</div>
+</div>
+
+<!-- ======================= PAGE 8 (Text page 36 — Electrolysis / Products) ======================= -->
+<div class="page">
+  <div class="page-num-top">36</div>
+  <h2 class="section-num"><span class="num-box">2.5</span> Electrolytic Cells and Electrolysis</h2>
+  <p>▶ <strong>Electrolysis</strong> is the process of decomposition of an electrolyte by passing electricity through its aqueous solution or molten state.</p>
+  <p>▶ <strong>Faraday's first law of electrolysis :</strong> The amount of chemical reaction which occurs at any electrode during electrolysis by a current is proportional to the quantity of electricity passed through the electrolyte (solution or melt).</p>
+  <div class="formula-box">W ∝ Q or W = Z Q = Z × I × t ; where Z is electrochemical equivalent of the substance deposited and Z = Eq. wt. of substance / 96500</div>
+  <p>▶ <strong>Faraday's second law of electrolysis :</strong> The amounts of different substances liberated by the same quantity of electricity passing through the electrolytic solution are proportional to their chemical equivalent weights.</p>
+  <div class="formula-box">W₁/W₂ = E₁/E₂ , where E is the equivalent weight = Atomic mass / No. of electrons gained or lost / oxidation / reduction of the element</div>
+
+  <h3 class="sub-section">Products of Electrolysis</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Electrolyte</th><th>Products At cathode</th><th>Products At anode</th><th>Reactions involved At cathode</th><th>Reactions involved At anode</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Molten NaCl</td>
+        <td>Na metal</td><td>Cl₂ gas</td>
+        <td>Na⁺ + e⁻ → Na(s)</td>
+        <td>Cl⁻ → ½ Cl₂(g) + e⁻</td>
+      </tr>
+      <tr>
+        <td>Aqueous NaCl</td>
+        <td>H₂ gas</td><td>Cl₂ gas</td>
+        <td>2H⁺(aq) + 2e⁻ → H₂(g)</td>
+        <td>Cl⁻(aq) → ½ Cl₂(g) + e⁻</td>
+      </tr>
+      <tr>
+        <td>Dil. H₂SO₄</td>
+        <td>H₂ gas</td><td>O₂ gas</td>
+        <td>H⁺(aq) + e⁻ → ½ H₂(g)</td>
+        <td>2H₂O(l) → O₂(g) + 4H⁺ + 4e⁻</td>
+      </tr>
+      <tr>
+        <td>Conc. H₂SO₄</td>
+        <td>H₂ gas</td><td>S₂O₈²⁻</td>
+        <td>H⁺(aq) + e⁻ → ½ H₂(g)</td>
+        <td>2SO₄²⁻(aq) → S₂O₈²⁻(aq) + 2e⁻</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="highlight-box" style="margin-top:4pt;">
+    <strong>Overvoltage / Over potential :</strong> Oxidation of H₂O is relatively slow process and thus needs extra potential. This extra potential needed to oxidise H₂O is called overvoltage/over potential. Due to overvoltage, the oxidation of chloride ion occurs at anode in preference to H₂O.
+    <br>▶ <strong>Discharge potential :</strong> The minimum potential that must be applied across the electrodes to bring about the electrolysis and thus, discharge of the ions on the electrode is known as discharge potential. It is in fact, the ability of ions to discharge first on electrodes.
+  </div>
+
+  <h2 class="section-num"><span class="num-box">2.6</span> Batteries (HD)</h2>
+  <p>▶ <strong>Battery</strong> is a source of electrical energy. It has one or more than one cell connected in series.</p>
+  <p>▶ Some commercially important cells (batteries) :</p>
+  <ul class="list-disc">
+    <li><strong>Primary cells (batteries) :</strong> These cells once exhausted cannot be used again e.g., dry cell and mercury cell.</li>
+    <li><strong>Secondary cells (batteries) :</strong> They are rechargeable cell which can be used again and again e.g., nickel-cadmium cell and lead storage battery.</li>
+  </ul>
+  <div class="page-footer">Electrochemistry &nbsp;|&nbsp; Team Kohinoor &nbsp;|&nbsp; Page 36</div>
+</div>
+
+<!-- ======================= PAGE 9 (Text page 37 — Fuel Cells / Corrosion) ======================= -->
+<div class="page">
+  <div class="page-num-top">37</div>
+  <h2 class="section-num"><span class="num-box">2.7</span> Fuel Cells (HD)</h2>
+  <p>▶ <strong>Fuel cells</strong> are devices which can convert the energy of combustion of fossil fuels (coal, gas or oil) directly into electrical energy are known as fuel cells, e.g., H₂—O₂ fuel cell. The fuel cells, combustion reaction is also considered as redox reaction e.g., hydrogen-oxygen fuel cell.</p>
+  <p>▶ <strong>Anode → Porous carbon containing suitable catalyst</strong></p>
+  <p>▶ <strong>Cathode → Porous carbon containing suitable catalyst</strong></p>
+  <p>▶ <strong>Electrolyte → Concentrated aqueous KOH/NaOH</strong></p>
+  <p>▶ <strong>Reaction at anode :</strong> 2H₂(g) + 4OH⁻(aq) → 4H₂O(l) + 4e⁻</p>
+  <p>▶ <strong>Reaction at cathode :</strong> O₂(g) + 2H₂O(l) + 4e⁻ → 4OH⁻(aq)</p>
+  <p>▶ <strong>Overall reaction :</strong> 2H₂(g) + O₂(g) → 2H₂O(l)</p>
+
+  <div class="center-img">
+    <svg width="300" height="120" viewBox="0 0 300 120">
+      <rect x="100" y="15" width="100" height="80" rx="4" fill="#e6f4fa" stroke="#2a5fa8" stroke-width="1.5"/>
+      <rect x="105" y="25" width="90" height="60" rx="3" fill="#fff8e1" stroke="#e6a817" stroke-width="1"/>
+      <text x="150" y="42" text-anchor="middle" font-size="7" font-weight="bold" fill="#333">Electrolyte (Aqueous NaOH)</text>
+      <line x1="120" y1="60" x2="120" y2="95" stroke="#777" stroke-width="2"/>
+      <line x1="180" y1="60" x2="180" y2="95" stroke="#777" stroke-width="2"/>
+      <text x="120" y="105" text-anchor="middle" font-size="7">Porous</text>
+      <text x="120" y="112" text-anchor="middle" font-size="7">graphite</text>
+      <text x="180" y="105" text-anchor="middle" font-size="7">Porous</text>
+      <text x="180" y="112" text-anchor="middle" font-size="7">graphite</text>
+      <text x="60" y="70" font-size="8" fill="#333">H₂</text>
+      <line x1="75" y1="65" x2="100" y2="65" stroke="#333" stroke-width="1" marker-end="url(#arrow)"/>
+      <text x="240" y="70" font-size="8" fill="#333">O₂</text>
+      <line x1="225" y1="65" x2="200" y2="65" stroke="#333" stroke-width="1" marker-end="url(#arrow)"/>
+      <line x1="150" y1="15" x2="150" y2="5" stroke="#333" stroke-width="1"/>
+      <line x1="150" y1="95" x2="150" y2="105" stroke="#333" stroke-width="1"/>
+    </svg>
+    <p class="label">A hydrogen-oxygen fuel cell</p>
+  </div>
+
+  <h3 class="sub-section">Some commercially important cells</h3>
+  <table>
+    <thead><tr><th>Cell</th><th>Anode reaction</th><th>Cathode reaction</th></tr></thead>
+    <tbody>
+      <tr><td>Dry cell</td><td>Zn(s) → Zn²⁺(aq) + 2e⁻</td><td>MnO₂(s) + NH₄⁺(aq) + e⁻ → MnO(OH)(s) + NH₃(g)</td></tr>
+      <tr><td>Mercury cell</td><td>Zn(s) + 2OH⁻(aq) → ZnO(s) + H₂O(l) + 2e⁻</td><td>HgO(s) + H₂O(l) + 2e⁻ → Hg(l) + 2OH⁻(aq)</td></tr>
+      <tr><td>Lead storage cell</td><td>Pb(s) + SO₄²⁻(aq) → PbSO₄(s) + 2e⁻</td><td>PbO₂(s) + SO₄²⁻(aq) + 4H⁺(aq) + 2e⁻ → PbSO₄(s) + 2H₂O(l)</td></tr>
+      <tr><td>Nickel-cadmium cell</td><td>Cd(s) + 2OH⁻(aq) → Cd(OH)₂(s) + 2e⁻</td><td>NiO₂(s) + 2H₂O(l) + 2e⁻ → Ni(OH)₂(s) + 2OH⁻(aq)</td></tr>
+      <tr><td>Fuel cell</td><td>2H₂(g) + 4OH⁻(aq) → 4H₂O(l) + 4e⁻</td><td>O₂(g) + 2H₂O(l) + 4e⁻ → 4OH⁻(aq)</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="section-num"><span class="num-box">2.8</span> Corrosion (HD)</h2>
+  <p>▶ <strong>Corrosion :</strong> The slow eating away of metals when exposed to the atmosphere is called corrosion.</p>
+  <p>▶ <strong>Corrosion of iron (Rusting) :</strong> It is an electrochemical phenomenon which occurs in the presence of moisture and oxygen.</p>
+  <p>At anode: 2Fe(s) → 2Fe²⁺(aq) + 4e⁻ ; E°(Fe²⁺/Fe) = –0.44 V</p>
+  <p>At cathode: O₂(g) + 4H⁺(aq) + 4e⁻ → 2H₂O(l) ; E°(H⁺/O₂/H₂O) = +1.23 V</p>
+  <p>Overall reaction : 2Fe(s) + O₂(g) + 4H⁺(aq) → 2Fe²⁺(aq) + 2H₂O(l) ; E°cell = 1.67 V</p>
+  <p>▶ <strong>Methods used for prevention of corrosion are barrier protection, sacrificial protection and anti-rust solutions.</strong></p>
+
+  <h2 class="section-num"><span class="num-box">2.9</span> Hydrogen Economy</h2>
+  <p>▶ Hydrogen can be used as renewable and non-polluting source of energy. Water will split into hydrogen and oxygen using solar energy.</p>
+  <p>H₂O(l) → H₂(g) + ½ O₂(g) (using solar energy)</p>
+  <p>▶ Combustion of hydrogen in a fuel cell will produce water.</p>
+  <p>H₂(g) + ½ O₂(g) → H₂O(l)</p>
+  <p>▶ Both these technologies are based on electrochemical principles. This production of energy will be very economical in comparison to fossil fuels and nuclear energy.</p>
+  <div class="page-footer">Electrochemistry &nbsp;|&nbsp; Team Kohinoor &nbsp;|&nbsp; Page 37</div>
+</div>
+
+<!-- ======================= PAGE 10 (Text page 39 — MCQs Corner / Questions) ======================= -->
+<div class="page">
+  <div class="page-num-top">39 — MCQ Section</div>
+  <div style="background: linear-gradient(135deg,#2a5fa8,#1a3a6e); color:#fff; padding:8pt; border-radius:4pt; text-align:center; margin-bottom:8pt;">
+    <h1 style="font-size:20pt;font-family:sans-serif;font-weight:800;letter-spacing:2pt;">NCERT EXTRACT &nbsp;|&nbsp; MCQ's CORNER</h1>
+  </div>
+  <p class="small">Assessment is complementary part of the learning process. It gives you a total insight whether the learning outcomes have been achieved or not. After going through the corresponding NCERT Textbook chapter, solve these questions in exam like environment. Give yourself four marks for correct answer and deduct one mark for wrong answer.</p>
+  <p class="note">As given at the end, that will help you plan your next step.</p>
+
+  <h3 style="font-family:sans-serif;font-weight:700;color:#1a3a6e;border-left:3pt solid #2a5fa8;padding-left:6pt;">2.1 Electrochemical Cells</h3>
+  <p><strong>1.</strong> In the cell, Zn | Zn²⁺ || Cu²⁺ | Cu, the negative terminal is</p>
+  <p style="padding-left:12pt;">(a) Cu &nbsp;&nbsp; (b) Cu²⁺ &nbsp;&nbsp; (c) Zn &nbsp;&nbsp; (d) Zn²⁺ <span style="float:right;font-size:8pt;color:#555;">(NCERT, Page 59)</span></p>
+
+  <p><strong>2.</strong> In a Daniell cell,</p>
+  <p style="padding-left:12pt;">(a) the chemical energy liberated during the redox reaction is converted to electrical energy</p>
+  <p style="padding-left:12pt;">(b) the electrical energy of the cell is converted to chemical energy</p>
+  <p style="padding-left:12pt;">(c) the energy of the cell is utilised in conduction of the redox reaction</p>
+  <p style="padding-left:12pt;">(d) the potential energy of the cell is converted into electrical energy <span style="float:right;font-size:8pt;color:#555;">(Page 32)</span></p>
+
+  <p><strong>3.</strong> Which of the following statements is correct about the given Daniell cell?</p>
+  <div class="center-img" style="margin-top:4pt;">
+    <svg width="320" height="100" viewBox="0 0 320 100">
+      <rect x="20" y="30" width="70" height="50" rx="4" fill="#e6f4fa" stroke="#2a5fa8" stroke-width="1"/>
+      <rect x="45" y="50" width="6" height="20" fill="#777" stroke="#333"/>
+      <text x="55" y="85" text-anchor="middle" font-size="7">ZnSO₄</text>
+      <text x="55" y="45" text-anchor="middle" font-size="7">Zn</text>
+      <text x="55" y="20" text-anchor="middle" font-size="7">Anode</text>
+      <rect x="110" y="35" width="15" height="40" rx="3" fill="#fff4e6" stroke="#e6a817" stroke-width="1"/>
+      <text x="117" y="55" text-anchor="middle" font-size="6">Salt bridge</text>
+      <rect x="180" y="30" width="70" height="50" rx="4" fill="#e6f4fa" stroke="#2a5fa8" stroke-width="1"/>
+      <rect x="205" y="50" width="6" height="20" fill="#b87333" stroke="#8a4a1c"/>
+      <text x="215" y="85" text-anchor="middle" font-size="7">CuSO₄</text>
+      <text x="215" y="45" text-anchor="middle" font-size="7">Cu</text>
+      <text x="215" y="20" text-anchor="middle" font-size="7">Cathode</text>
+      <line x1="55" y1="30" x2="55" y2="15" stroke="#333" stroke-width="1"/>
+      <line x1="55" y1="15" x2="215" y2="15" stroke="#333" stroke-width="1"/>
+      <line x1="215" y1="15" x2="215" y2="30" stroke="#333" stroke-width="1"/>
+      <circle cx="135" cy="15" r="4" fill="#fff" stroke="#333" stroke-width="0.5"/>
+      <text x="135" y="19" text-anchor="middle" font-size="6">A</text>
+      <line x1="135" y1="11" x2="135" y2="35" stroke="#333" stroke-width="0.5" stroke-dasharray="2,2"/>
+    </svg>
+  </div>
+  <p style="padding-left:12pt;">(a) This cell converts the electrical energy liberated during the redox reaction to chemical energy.</p>
+  <p style="padding-left:12pt;">(b) This cell has an electrical potential greater than 1.1 V when concentration of Zn²⁺ and Cu²⁺ ions is unity (1 mol dm⁻³).</p>
+  <p style="padding-left:12pt;">(c) In this cell, copper is acting as cathode and zinc is acting as anode.</p>
+  <p style="padding-left:12pt;">(d) Redox reaction occurring in this cell is Cu(s) + Zn²⁺(aq) → Cu²⁺(aq) + Zn(s) <span style="float:right;font-size:8pt;color:#555;">(Page 32)</span></p>
+
+  <p><strong>4.</strong> Given here are two figures of Daniell cell (X) and (Y). Study the figures and mark the incorrect statement from the following:</p>
+  <div class="two-col" style="margin-top:4pt;">
+    <div class="center-img">
+      <svg width="130" height="80" viewBox="0 0 130 80">
+        <rect x="10" y="20" width="45" height="45" rx="3" fill="#e6f4fa" stroke="#2a5fa8" stroke-width="1"/>
+        <rect x="25" y="35" width="5" height="15" fill="#777" stroke="#333"/>
+        <text x="32" y="15" text-anchor="middle" font-size="7">Zn (anode)</text>
+        <text x="32" y="70" text-anchor="middle" font-size="7">ZnSO₄</text>
+        <rect x="80" y="20" width="45" height="45" rx="3" fill="#e6f4fa" stroke="#2a5fa8" stroke-width="1"/>
+        <rect x="95" y="35" width="5" height="15" fill="#b87333" stroke="#8a4a1c"/>
+        <text x="102" y="15" text-anchor="middle" font-size="7">Cu (cathode)</text>
+        <text x="102" y="70" text-anchor="middle" font-size="7">CuSO₄</text>
+        <line x1="55" y1="30" x2="80" y2="30" stroke="#333" stroke-width="1"/>
+        <line x1="55" y1="50" x2="80" y2="50" stroke="#333" stroke-width="1"/>
+        <text x="65" y="85" text-anchor="middle" font-size="7">Eₑₓₜ = 1.1 V (X)</text>
+      </svg>
+    </div>
+    <div class="center-img">
+      <svg width="130" height="80" viewBox="0 0 130 80">
+        <rect x="10" y="20" width="45" height="45" rx="3" fill="#ffe6e6" stroke="#d03030" stroke-width="1"/>
+        <rect x="25" y="35" width="5" height="15" fill="#777" stroke="#333"/>
+        <text x="32" y="15" text-anchor="middle" font-size="7">Zn (cathode)</text>
+        <text x="32" y="70" text-anchor="middle" font-size="7">ZnSO₄</text>
+        <rect x="80" y="20" width="45" height="45" rx="3" fill="#ffe6e6" stroke="#d03030" stroke-width="1"/>
+        <rect x="95" y="35" width="5" height="15" fill="#b87333" stroke="#8a4a1c"/>
+        <text x="102" y="15" text-anchor="middle" font-size="7">Cu (anode)</text>
+        <text x="102" y="70" text-anchor="middle" font-size="7">CuSO₄</text>
+        <line x1="55" y1="30" x2="80" y2="30" stroke="#333" stroke-width="1"/>
+        <line x1="55" y1="50" x2="80" y2="50" stroke="#333" stroke-width="1"/>
+        <text x="65" y="85" text-anchor="middle" font-size="7">Eₑₓₜ > 1.1 V (Y)</text>
+      </svg>
+    </div>
+  </div>
+  <p style="padding-left:12pt;">(a) In fig. (X), electrons flow from Zn rod to Cu rod hence current flows from Cu to Zn (Eₑₓₜ &lt; 1.1 V).</p>
+  <p style="padding-left:12pt;">(b) In fig. (Y), electrons flow from Cu to Zn as current flows from Zn to Cu (Eₑₓₜ > 1.1 V).</p>
+  <p style="padding-left:12pt;">(c) In fig. (X), Zn dissolves at anode and Cu deposits at cathode.</p>
+  <p style="padding-left:12pt;">(d) In fig. (Y), Zn is deposited at Cu and Cu is deposited at Zn.</p>
+
+  <p><strong>5.</strong> A galvanic cell has electrical potential of 1.1 V. If an opposing potential of 1.1 V is applied to this cell, what will happen to the cell reaction and current flowing through the cell?</p>
+  <p style="padding-left:12pt;">(a) The reaction stops and no current flows through the cell.</p>
+  <p style="padding-left:12pt;">(b) The reaction continuous but current flows in opposite direction.</p>
+  <p style="padding-left:12pt;">(c) The concentration of reactants becomes unit and current flows from cathode to anode.</p>
+  <p style="padding-left:12pt;">(d) The cell does not function as galvanic cell and zinc is deposited on zinc plate.</p>
+
+  <div class="page-footer">Electrochemistry &nbsp;|&nbsp; Team Kohinoor &nbsp;|&nbsp; Page 39 — MCQs</div>
+</div>
+
+<!-- ======================= PAGE 11 (Text page 56 — Answer Key / More Questions / Final pages) ======================= -->
+<div class="page">
+  <div class="page-num-top">56 — Answer Key &amp; Questions</div>
+
+  <div class="answer-key-box">
+    <h2 style="font-family:sans-serif;font-weight:800;color:#1a3a6e;text-align:center;margin-bottom:6pt;">ANSWER KEY</h2>
+    <h3 style="font-family:sans-serif;font-weight:700;color:#2a5fa8;">MCQs Corner</h3>
+    <table>
+      <thead><tr><th>Q. No.</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th></tr></thead>
+      <tbody>
+        <tr><td>Ans.</td><td>(c)</td><td>(a)</td><td>(c)</td><td>(d)</td><td>(a)</td><td>(c)</td><td>(b)</td><td>(a)</td><td>(b)</td><td>(d)</td></tr>
+      </tbody>
+      <tbody style="margin-top:4pt;">
+        <tr><td>Q. No.</td><td>11</td><td>12</td><td>13</td><td>14</td><td>15</td><td>16</td><td>17</td><td>18</td><td>19</td><td>20</td></tr>
+        <tr><td>Ans.</td><td>(c)</td><td>(a)</td><td>(b)</td><td>(a)</td><td>(a)</td><td>(d)</td><td>(a)</td><td>(d)</td><td>(a)</td><td>(b)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 style="font-family:sans-serif;font-weight:700;color:#2a5fa8;border-left:3pt solid #2a5fa8;padding-left:6pt;margin-top:8pt;">Exam Answer — NCERT Example Problems</h2>
+  <p><strong>1.</strong> (c) &nbsp; <strong>2.</strong> (d) &nbsp; <strong>3.</strong> (b) &nbsp; <strong>4.</strong> (d) &nbsp; <strong>5.</strong> (c) &nbsp; <strong>6.</strong> (c) &nbsp; <strong>7.</strong> (b) &nbsp; <strong>8.</strong> (c) &nbsp; <strong>9.</strong> (b) &nbsp; <strong>10.</strong> (d) &nbsp; <strong>11.</strong> (a) &nbsp; <strong>12.</strong> (c) &nbsp; <strong>13.</strong> (d)</p>
+
+  <h2 style="font-family:sans-serif;font-weight:700;color:#2a5fa8;border-left:3pt solid #2a5fa8;padding-left:6pt;margin-top:8pt;">Assertion &amp; Reason Questions</h2>
+  <p><strong>1.</strong> (b) &nbsp; <strong>2.</strong> (c) &nbsp; <strong>3.</strong> (a) &nbsp; <strong>4.</strong> (a) &nbsp; <strong>5.</strong> (c) &nbsp; <strong>6.</strong> (a) &nbsp; <strong>7.</strong> (a) &nbsp; <strong>8.</strong> (b) &nbsp; <strong>9.</strong> (b) &nbsp; <strong>10.</strong> (d)</p>
+
+  <h2 style="font-family:sans-serif;font-weight:700;color:#2a5fa8;border-left:3pt solid #2a5fa8;padding-left:6pt;margin-top:8pt;">Statement Based Questions</h2>
+  <p><strong>1.</strong> (d) &nbsp; <strong>2.</strong> (a) &nbsp; <strong>3.</strong> (d) &nbsp; <strong>4.</strong> (a) &nbsp; <strong>5.</strong> (b) &nbsp; <strong>6.</strong> (a) &nbsp; <strong>7.</strong> (a) &nbsp; <strong>8.</strong> (b) &nbsp; <strong>9.</strong> (a) &nbsp; <strong>10.</strong> (a)</p>
+
+  <h2 style="font-family:sans-serif;font-weight:700;color:#2a5fa8;border-left:3pt solid #2a5fa8;padding-left:6pt;margin-top:8pt;">Matching Type Questions</h2>
+  <p><strong>1.</strong> (b) &nbsp; <strong>2.</strong> (b) &nbsp; <strong>3.</strong> (b) &nbsp; <strong>4.</strong> (c) &nbsp; <strong>5.</strong> (a)</p>
+
+  <h2 style="font-family:sans-serif;font-weight:700;color:#2a5fa8;border-left:3pt solid #2a5fa8;padding-left:6pt;margin-top:8pt;">Case Based Questions</h2>
+  <p><strong>1.</strong> (d) &nbsp; <strong>2.</strong> (b) &nbsp; <strong>3.</strong> (c) &nbsp; <strong>4.</strong> (b) &nbsp; <strong>5.</strong> (c) &nbsp; <strong>6.</strong> (c) &nbsp; <strong>7.</strong> (b) &nbsp; <strong>8.</strong> (c) &nbsp; <strong>9.</strong> (c)</p>
+
+  <h2 style="font-family:sans-serif;font-weight:700;color:#2a5fa8;border-left:3pt solid #2a5fa8;padding-left:6pt;margin-top:8pt;">Numerical Value Type Questions</h2>
+  <p><strong>1.</strong> (1.067) &nbsp; <strong>2.</strong> (6.12) &nbsp; <strong>3.</strong> (125) &nbsp; <strong>4.</strong> (14) &nbsp; <strong>5.</strong> (–6)</p>
+
+  <h2 style="font-family:sans-serif;font-weight:700;color:#2a5fa8;border-left:3pt solid #2a5fa8;padding-left:6pt;margin-top:8pt;">Figure Based Questions</h2>
+  <p><strong>1.</strong> (b) &nbsp; <strong>2.</strong> (a) &nbsp; <strong>3.</strong> (a) &nbsp; <strong>4.</strong> (b) &nbsp; <strong>5.</strong> (c)</p>
+
+  <h2 style="font-family:sans-serif;font-weight:700;color:#2a5fa8;border-left:3pt solid #2a5fa8;padding-left:6pt;margin-top:8pt;">Multidimensional Questions</h2>
+  <p><strong>1.</strong> (d) &nbsp; <strong>2.</strong> (d) &nbsp; <strong>3.</strong> (a) &nbsp; <strong>4.</strong> (c) &nbsp; <strong>5.</strong> (b) &nbsp; <strong>6.</strong> (c) &nbsp; <strong>7.</strong> (d) &nbsp; <strong>8.</strong> (b) &nbsp; <strong>9.</strong> (b) &nbsp; <strong>10.</strong> (d)</p>
+
+  <h2 style="font-family:sans-serif;font-weight:700;color:#2a5fa8;border-left:3pt solid #2a5fa8;padding-left:6pt;margin-top:8pt;">Exam Archive</h2>
+  <p><strong>1.</strong> (c) &nbsp; <strong>2.</strong> (c) &nbsp; <strong>3.</strong> (a) &nbsp; <strong>4.</strong> (c) &nbsp; <strong>5.</strong> (b) &nbsp; <strong>6.</strong> (b) &nbsp; <strong>7.</strong> (a) &nbsp; <strong>8.</strong> (a) &nbsp; <strong>9.</strong> (a) &nbsp; <strong>10.</strong> (a) &nbsp; <strong>11.</strong> (d) &nbsp; <strong>12.</strong> (d) &nbsp; <strong>13.</strong> (a) &nbsp; <strong>14.</strong> (a) &nbsp; <strong>15.</strong> (d) &nbsp; <strong>16.</strong> (c) &nbsp; <strong>17.</strong> (a) &nbsp; <strong>18.</strong> (c) &nbsp; <strong>19.</strong> (c) &nbsp; <strong>20.</strong> (a) &nbsp; <strong>21.</strong> (b) &nbsp; <strong>22.</strong> (b) &nbsp; <strong>23.</strong> (d)</p>
+
+  <h2 style="font-family:sans-serif;font-weight:700;color:#2a5fa8;border-left:3pt solid #2a5fa8;padding-left:6pt;margin-top:8pt;">More Questions (from scanned pages)</h2>
+  <p><strong>22.</strong> For the cell reaction : 2Fe³⁺(aq) + 2I⁻(aq) → 2Fe²⁺(aq) + I₂(aq) ; E°cell = 0.24 V at 298 K. The standard Gibbs energy (ΔG°) of the cell reaction is [Given that Faraday constant, F = 96500 C mol⁻¹]</p>
+  <p style="padding-left:12pt;">(a) 23.16 kJ mol⁻¹ &nbsp; (b) –46.32 kJ mol⁻¹ &nbsp; (c) –23.16 kJ mol⁻¹ &nbsp; (d) 46.32 kJ mol⁻¹ <span style="float:right;font-size:8pt;color:#555;">(NEET)</span></p>
+
+  <p><strong>23.</strong> For a cell involving one electron, E°cell = 0.59 V at 298 K, the equilibrium constant for the cell reaction is [Given that 2.303 RT / F = 0.059 V at T = 298 K]</p>
+  <p style="padding-left:12pt;">(a) 1.0 × 10³⁰ &nbsp; (b) 1.0 × 10⁹ &nbsp; (c) 1.0 × 10⁵ &nbsp; (d) 1.0 × 10¹⁰ <span style="float:right;font-size:8pt;color:#555;">(NEET)</span></p>
+
+  <h2 style="font-family:sans-serif;font-size:14pt;font-weight:800;color:#fff;background:#2a5fa8;padding:4pt 6pt;border-radius:3pt;margin-top:10pt;">Answer Key — Additional Questions (22-23)</h2>
+  <p><strong>22.</strong> (c) –23.16 kJ mol⁻¹</p>
+  <p><strong>23.</strong> (d) 1.0 × 10¹⁰</p>
+
+  <div class="highlight-box" style="margin-top:6pt;"><strong>Note:</strong> Several handwritten annotations appear across scanned pages. Numbers in charts/tables may differ slightly due to image blur. This digital version preserves all readable text; unclear spots marked where appropriate.</div>
+  <div class="approx">Approximate figures recreated: page 1 pie charts (simplified SVG), page 2-3 galvanic cell diagrams, page 3 SHE diagram, page 8 graph of Λₘ vs √C, page 9 fuel cell diagram, page 10-11 MCQ diagrams. These are approximate vector recreations of the scanned images.</div>
+
+  <div class="page-footer">Electrochemistry &nbsp;|&nbsp; Team Kohinoor &nbsp;|&nbsp; Page 56 — Final / Answer Key</div>
+</div>
+
+</body>
+</html>
