@@ -73,7 +73,7 @@ class FocusProductivityRepository(
             ),
             BlockingGroupEntity(
                 name = "Video & Reels Detox",
-                description = "Blocks streaming apps, YouTube Shorts, and entertainment feeds.",
+                description = "Blocks video streaming and entertainment apps during focus sessions.",
                 colorHex = 0xFF38BDF8,
                 blockedPackages = listOf(
                     "com.google.android.youtube",

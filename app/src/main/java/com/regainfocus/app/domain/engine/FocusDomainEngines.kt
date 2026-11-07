@@ -8,17 +8,11 @@ import com.regainfocus.app.domain.model.StrictEnforcementLevel
 import com.regainfocus.app.domain.model.TimerModeType
 import com.regainfocus.app.domain.model.TimerPhase
 import java.time.Instant
-import java.time.LocalDate
 import java.time.ZoneId
 import kotlin.math.max
 
 /**
- * Pure, deterministic, unit-tested calculation of remaining time & anti-clock-tamper deadlines.
- *
- * Within the same device boot session (`currentBootId == state.bootAnchorId`), monotonic
- * `elapsedRealtimeMillis` is authoritative so advancing the system wall clock in Android Settings
- * CANNOT prematurely end an active Strict Mode session. Across a device reboot (`bootAnchorId`
- * changed), `phaseEndWallMillis - currentWallMillis` recovers remaining session time accurately.
+ * Pure, deterministic calculation of remaining time & anti-clock-tamper deadlines.
  */
 object StrictRemainingTimeCalculator {
 
@@ -78,9 +72,6 @@ object StrictRemainingTimeCalculator {
     }
 }
 
-/**
- * Deterministic state transitions for Pomodoro cycles, Custom Countdown, and Stopwatch.
- */
 object PomodoroPhaseEngine {
 
     data class PhaseTransitionResult(
@@ -102,53 +93,23 @@ object PomodoroPhaseEngine {
             TimerPhase.WORK -> {
                 if (currentCycle >= totalCycles) {
                     if (longBreakDurationMillis > 0L) {
-                        PhaseTransitionResult(
-                            nextPhase = TimerPhase.LONG_BREAK,
-                            nextCycle = currentCycle,
-                            nextDurationMillis = longBreakDurationMillis,
-                            isSessionCompleted = false
-                        )
+                        PhaseTransitionResult(TimerPhase.LONG_BREAK, currentCycle, longBreakDurationMillis, false)
                     } else {
-                        PhaseTransitionResult(
-                            nextPhase = TimerPhase.COMPLETED,
-                            nextCycle = currentCycle,
-                            nextDurationMillis = 0L,
-                            isSessionCompleted = true
-                        )
+                        PhaseTransitionResult(TimerPhase.COMPLETED, currentCycle, 0L, true)
                     }
                 } else {
                     if (shortBreakDurationMillis > 0L) {
-                        PhaseTransitionResult(
-                            nextPhase = TimerPhase.SHORT_BREAK,
-                            nextCycle = currentCycle,
-                            nextDurationMillis = shortBreakDurationMillis,
-                            isSessionCompleted = false
-                        )
+                        PhaseTransitionResult(TimerPhase.SHORT_BREAK, currentCycle, shortBreakDurationMillis, false)
                     } else {
-                        PhaseTransitionResult(
-                            nextPhase = TimerPhase.WORK,
-                            nextCycle = currentCycle + 1,
-                            nextDurationMillis = workDurationMillis,
-                            isSessionCompleted = false
-                        )
+                        PhaseTransitionResult(TimerPhase.WORK, currentCycle + 1, workDurationMillis, false)
                     }
                 }
             }
             TimerPhase.SHORT_BREAK -> {
-                PhaseTransitionResult(
-                    nextPhase = TimerPhase.WORK,
-                    nextCycle = currentCycle + 1,
-                    nextDurationMillis = workDurationMillis,
-                    isSessionCompleted = false
-                )
+                PhaseTransitionResult(TimerPhase.WORK, currentCycle + 1, workDurationMillis, false)
             }
             TimerPhase.LONG_BREAK, TimerPhase.COMPLETED, TimerPhase.IDLE -> {
-                PhaseTransitionResult(
-                    nextPhase = TimerPhase.COMPLETED,
-                    nextCycle = currentCycle,
-                    nextDurationMillis = 0L,
-                    isSessionCompleted = true
-                )
+                PhaseTransitionResult(TimerPhase.COMPLETED, currentCycle, 0L, true)
             }
         }
     }
@@ -168,19 +129,25 @@ object PomodoroPhaseEngine {
                 val totalShortBreaks = shortBreakDurationMillis * (cycles - 1).coerceAtLeast(0)
                 totalWork + totalShortBreaks + longBreakDurationMillis
             }
-            TimerModeType.STOPWATCH -> workDurationMillis // Minimum strict commitment window if enabled on stopwatch
+            TimerModeType.STOPWATCH -> workDurationMillis
         }
     }
 }
 
 /**
- * Pure policy engine deciding whether a foreground window/package/view must be intercepted.
- * Never blocks emergency dialer, telecom, system UI, or RegainFocus itself.
+ * Policy-compliant foreground package evaluator.
+ *
+ * Security & Google Play Policy Invariants:
+ * - Permanently allowlists emergency dialers, telecom, System UI, System Settings, Package Installer,
+ *   Permission Controller, Google Play Store / Play Protect, active keyboards, and Home Launchers.
+ * - NEVER interferes with System Settings, Permission revocation, Play Protect, or app uninstallation.
  */
 object StrictBlockerPolicyEngine {
 
     private val ESSENTIAL_SYSTEM_ALLOWLIST = setOf(
+        "android",
         "com.android.systemui",
+        "com.android.settings",
         "com.android.incallui",
         "com.android.server.telecom",
         "com.google.android.dialer",
@@ -189,53 +156,28 @@ object StrictBlockerPolicyEngine {
         "com.samsung.android.dialer",
         "com.android.phone",
         "com.android.emergency",
-        "android"
-    )
-
-    private val SETTINGS_PACKAGES = setOf(
-        "com.android.settings",
-        "com.samsung.accessibility",
-        "com.miui.securitycenter",
-        "com.coloros.safecenter"
-    )
-
-    private val DANGEROUS_SETTINGS_CLASS_HINTS = listOf(
-        "InstalledAppDetails",
-        "SpaActivity",
-        "ManageApplications",
-        "AccessibilitySettings",
-        "ToggleAccessibilityService",
-        "DeviceAdminAdd",
-        "DeviceAdminSettings",
-        "UninstallAppProgress",
-        "DateTimeSettings"
-    )
-
-    private val SHORTS_AND_REELS_VIEW_IDS = listOf(
-        "com.google.android.youtube:id/reel_player_page_container",
-        "com.google.android.youtube:id/reel_recycler",
-        "com.instagram.android:id/clips_viewer_view_pager",
-        "com.instagram.android:id/reel_viewer_root",
-        "com.snapchat.android:id/spotlight_view"
+        "com.android.packageinstaller",
+        "com.google.android.packageinstaller",
+        "com.android.permissioncontroller",
+        "com.google.android.permissioncontroller",
+        "com.android.vending",
+        "com.google.android.gms"
     )
 
     sealed class InterceptionDecision {
         data object Allow : InterceptionDecision()
         data class BlockApp(val packageName: String, val reason: BlockReason) : InterceptionDecision()
-        data class BlockInAppShortFeed(val packageName: String) : InterceptionDecision()
     }
 
     enum class BlockReason {
         STRICT_FOCUS_SESSION,
         FLEXIBLE_FOCUS_SESSION,
-        SETTINGS_SELF_GUARD,
         DAILY_APP_LIMIT_EXCEEDED
     }
 
     fun evaluateForegroundEvent(
         selfPackageName: String,
         foregroundPackage: String,
-        foregroundClassName: String?,
         launcherPackages: Set<String>,
         imePackages: Set<String>,
         sessionState: PersistedTimerSessionState,
@@ -254,7 +196,7 @@ object StrictBlockerPolicyEngine {
             return InterceptionDecision.Allow
         }
 
-        // 1. Check active Focus Session blocking (Strict Mode keeps blocking across entire session, including breaks)
+        // 1. Active Focus Session check
         if (sessionState.isActive) {
             val isStrict = sessionState.strictLevel != StrictEnforcementLevel.NONE
             val stillWithinSession = if (isStrict) {
@@ -268,28 +210,15 @@ object StrictBlockerPolicyEngine {
                 !sessionState.isPaused && sessionState.phase == TimerPhase.WORK
             }
 
-            if (stillWithinSession) {
-                // Guard Settings pages against impulsive Force-Stop / Accessibility revocation / Clock tamper during Strict Mode
-                if (isStrict && sessionState.guardSettings && foregroundPackage in SETTINGS_PACKAGES) {
-                    val cls = foregroundClassName.orEmpty()
-                    if (cls.isEmpty() || DANGEROUS_SETTINGS_CLASS_HINTS.any { cls.contains(it, ignoreCase = true) }) {
-                        return InterceptionDecision.BlockApp(
-                            packageName = foregroundPackage,
-                            reason = BlockReason.SETTINGS_SELF_GUARD
-                        )
-                    }
-                }
-
-                if (foregroundPackage in sessionState.blockedPackages) {
-                    return InterceptionDecision.BlockApp(
-                        packageName = foregroundPackage,
-                        reason = if (isStrict) BlockReason.STRICT_FOCUS_SESSION else BlockReason.FLEXIBLE_FOCUS_SESSION
-                    )
-                }
+            if (stillWithinSession && foregroundPackage in sessionState.blockedPackages) {
+                return InterceptionDecision.BlockApp(
+                    packageName = foregroundPackage,
+                    reason = if (isStrict) BlockReason.STRICT_FOCUS_SESSION else BlockReason.FLEXIBLE_FOCUS_SESSION
+                )
             }
         }
 
-        // 2. Check Daily App Limits
+        // 2. Per-App Daily Screen-Time Limit check
         if (foregroundPackage in exceededDailyLimitPackages) {
             return InterceptionDecision.BlockApp(
                 packageName = foregroundPackage,
@@ -299,16 +228,8 @@ object StrictBlockerPolicyEngine {
 
         return InterceptionDecision.Allow
     }
-
-    fun isShortFormVideoNodeId(viewResourceId: String?): Boolean {
-        if (viewResourceId.isNullOrBlank()) return false
-        return SHORTS_AND_REELS_VIEW_IDS.any { viewResourceId.contains(it, ignoreCase = true) }
-    }
 }
 
-/**
- * Pure analytics engine computing streaks, goal completion, and achievements from real FocusSessionEntity records.
- */
 object StreakAndAchievementEngine {
 
     data class StreakSummary(
@@ -354,7 +275,6 @@ object StreakAndAchievementEngine {
             }
         }
 
-        // Current streak counts backwards from today (or yesterday if today isn't logged yet)
         var cursor = when {
             todayEpochDay in activeDays -> todayEpochDay
             (todayEpochDay - 1L) in activeDays -> todayEpochDay - 1L
@@ -391,96 +311,16 @@ object StreakAndAchievementEngine {
         val bestStreak = streakSummary.longestStreakDays
 
         return listOf(
-            AchievementProgress(
-                id = "first_focus",
-                title = "First Spark",
-                description = "Complete your first focus session",
-                currentValue = completedSessions,
-                targetValue = 1,
-                isUnlocked = completedSessions >= 1,
-                badgeCategory = "Milestone"
-            ),
-            AchievementProgress(
-                id = "focus_1h",
-                title = "1 Hour Reclaimed",
-                description = "Accumulate 60 minutes of deep focus",
-                currentValue = totalFocusMinutes,
-                targetValue = 60,
-                isUnlocked = totalFocusMinutes >= 60,
-                badgeCategory = "Hours"
-            ),
-            AchievementProgress(
-                id = "focus_10h",
-                title = "Deep Scholar (10h)",
-                description = "Accumulate 10 hours of verified study time",
-                currentValue = totalFocusHours,
-                targetValue = 10,
-                isUnlocked = totalFocusHours >= 10,
-                badgeCategory = "Hours"
-            ),
-            AchievementProgress(
-                id = "focus_50h",
-                title = "Focus Architect (50h)",
-                description = "Accumulate 50 hours of focused work",
-                currentValue = totalFocusHours,
-                targetValue = 50,
-                isUnlocked = totalFocusHours >= 50,
-                badgeCategory = "Hours"
-            ),
-            AchievementProgress(
-                id = "focus_100h",
-                title = "Centurion (100h)",
-                description = "Reach 100 total hours of distraction-free focus",
-                currentValue = totalFocusHours,
-                targetValue = 100,
-                isUnlocked = totalFocusHours >= 100,
-                badgeCategory = "Hours"
-            ),
-            AchievementProgress(
-                id = "streak_3",
-                title = "3-Day Momentum",
-                description = "Maintain a 3-day focus streak",
-                currentValue = bestStreak,
-                targetValue = 3,
-                isUnlocked = bestStreak >= 3,
-                badgeCategory = "Streak"
-            ),
-            AchievementProgress(
-                id = "streak_7",
-                title = "Full Week Discipline",
-                description = "Maintain a 7-day focus streak",
-                currentValue = bestStreak,
-                targetValue = 7,
-                isUnlocked = bestStreak >= 7,
-                badgeCategory = "Streak"
-            ),
-            AchievementProgress(
-                id = "streak_30",
-                title = "30-Day Unstoppable",
-                description = "Maintain a 30-day focus streak",
-                currentValue = bestStreak,
-                targetValue = 30,
-                isUnlocked = bestStreak >= 30,
-                badgeCategory = "Streak"
-            ),
-            AchievementProgress(
-                id = "strict_5",
-                title = "Iron Resolve",
-                description = "Finish 5 Strict Mode sessions with zero early exits",
-                currentValue = strictCompleted,
-                targetValue = 5,
-                isUnlocked = strictCompleted >= 5,
-                badgeCategory = "Strict"
-            ),
-            AchievementProgress(
-                id = "shield_25",
-                title = "Distraction Slayer",
-                description = "Block 25 distracting app launch attempts",
-                currentValue = totalInterceptions,
-                targetValue = 25,
-                isUnlocked = totalInterceptions >= 25,
-                badgeCategory = "Shield"
-            )
+            AchievementProgress("first_focus", "First Spark", "Complete your first focus session", completedSessions, 1, completedSessions >= 1, "Milestone"),
+            AchievementProgress("focus_1h", "1 Hour Reclaimed", "Accumulate 60 minutes of deep focus", totalFocusMinutes, 60, totalFocusMinutes >= 60, "Hours"),
+            AchievementProgress("focus_10h", "Deep Scholar (10h)", "Accumulate 10 hours of verified study time", totalFocusHours, 10, totalFocusHours >= 10, "Hours"),
+            AchievementProgress("focus_50h", "Focus Architect (50h)", "Accumulate 50 hours of focused work", totalFocusHours, 50, totalFocusHours >= 50, "Hours"),
+            AchievementProgress("focus_100h", "Centurion (100h)", "Reach 100 total hours of distraction-free focus", totalFocusHours, 100, totalFocusHours >= 100, "Hours"),
+            AchievementProgress("streak_3", "3-Day Momentum", "Maintain a 3-day focus streak", bestStreak, 3, bestStreak >= 3, "Streak"),
+            AchievementProgress("streak_7", "Full Week Discipline", "Maintain a 7-day focus streak", bestStreak, 7, bestStreak >= 7, "Streak"),
+            AchievementProgress("streak_30", "30-Day Unstoppable", "Maintain a 30-day focus streak", bestStreak, 30, bestStreak >= 30, "Streak"),
+            AchievementProgress("strict_5", "Iron Resolve", "Finish 5 Strict Mode sessions with zero early exits", strictCompleted, 5, strictCompleted >= 5, "Strict"),
+            AchievementProgress("shield_25", "Distraction Slayer", "Block 25 distracting app launch attempts", totalInterceptions, 25, totalInterceptions >= 25, "Shield")
         )
     }
 }

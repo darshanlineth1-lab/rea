@@ -41,21 +41,23 @@ import kotlinx.coroutines.launch
 import kotlin.math.max
 
 /**
- * Wall-clock & monotonic foreground Focus Timer + Strict Watchdog + Ambient Audio Service.
+ * Wall-clock & monotonic foreground Focus Timer + UsageStats App Shield Watchdog + Ambient Audio Service.
  *
- * Key upgrades over open-source foundation (`PomodoroTimerService`):
- * 1) Uses `SystemClock.elapsedRealtime()` + persisted wall-clock deadlines (`AlarmManager` fallback)
- *    so minimizing the app, Doze mode, or process restarts never cause timer drift.
- * 2) Never cancels/resets running sessions in `onUnbind()` or `onDestroy()`.
- * 3) Rejects any pause/stop/skip intent if an active Strict Session (`STANDARD_STRICT` or `DEVICE_OWNER_STRICT`) is running!
- * 4) Runs a secondary `UsageStatsManager` foreground watchdog every 750ms during active sessions.
- * 5) Automatically releases Mode A & Mode B restrictions and saves session history when timer reaches 00:00.
+ * Works across both distribution flavors:
+ * - In `sideload` (no AccessibilityService), its 350ms `UsageStatsManager` watchdog is the primary
+ *   blocker during active Focus Sessions, launching `StrictBlockShieldActivity` (permitted on
+ *   Android 10-15 when the user grants `SYSTEM_ALERT_WINDOW`).
+ * - In `playstore`, it acts as a secondary backup alongside `StrictAppBlockerAccessibilityService`.
+ * - Uses `AlarmManager.setAndAllowWhileIdle` (zero `SCHEDULE_EXACT_ALARM` permission required).
  */
 class FocusTimerService : Service() {
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var tickerJob: Job? = null
     private val soundSynthesizer = AmbientSoundSynthesizer()
+
+    private var lastWatchdogInterceptPkg: String = ""
+    private var lastWatchdogInterceptElapsed: Long = 0L
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -67,7 +69,7 @@ class FocusTimerService : Service() {
             ACTION_STOP_FLEXIBLE -> handleStopFlexible()
             ACTION_SKIP_BREAK_FLEXIBLE -> handleSkipBreakFlexible()
             ACTION_REFRESH_AUDIO -> serviceScope.launch { syncAudioWithSettings() }
-            null -> handleRecoverOrSync() // System restart via START_STICKY
+            null -> handleRecoverOrSync()
         }
         return START_STICKY
     }
@@ -78,13 +80,7 @@ class FocusTimerService : Service() {
         if (!state.isActive) return
 
         promoteToForeground(state)
-        if (state.strictLevel == StrictEnforcementLevel.DEVICE_OWNER_STRICT) {
-            app.container.deviceOwnerManager.applyDeviceOwnerStrictSession(
-                blockedPackages = state.blockedPackages,
-                enableLockTask = state.useLockTaskInDeviceOwner
-            )
-        }
-        scheduleExactPhaseAlarm(state)
+        scheduleDozeSafePhaseAlarm(state)
         startTickerLoop()
     }
 
@@ -92,7 +88,6 @@ class FocusTimerService : Service() {
         val app = application as RegainFocusApplication
         val state = app.container.activeSessionStore.readSnapshotSync()
         if (!state.isActive) {
-            app.container.deviceOwnerManager.releaseAllDeviceOwnerRestrictions()
             stopForegroundSafely()
             stopSelf()
             return
@@ -102,7 +97,6 @@ class FocusTimerService : Service() {
         val nowElapsed = SystemClock.elapsedRealtime()
         val bootId = ActiveStrictSessionStore.currentBootCountId(this)
 
-        // Check if strict session already expired while device was powered off / process was dead
         if (state.isStrictActive &&
             StrictRemainingTimeCalculator.isStrictSessionExpired(state, nowWall, nowElapsed, bootId)
         ) {
@@ -112,7 +106,6 @@ class FocusTimerService : Service() {
             return
         }
 
-        // Re-anchor monotonic elapsedRealtime if recovered after a device reboot
         val syncedState = if (state.bootAnchorId != bootId && state.timerMode != TimerModeType.STOPWATCH) {
             val remPhase = max(0L, state.phaseEndWallMillis - nowWall)
             val remStrict = if (state.isStrictActive) max(0L, state.strictHardEndWallMillis - nowWall) else 0L
@@ -125,22 +118,14 @@ class FocusTimerService : Service() {
             state
         }
 
-        if (syncedState.strictLevel == StrictEnforcementLevel.DEVICE_OWNER_STRICT) {
-            app.container.deviceOwnerManager.applyDeviceOwnerStrictSession(
-                blockedPackages = syncedState.blockedPackages,
-                enableLockTask = syncedState.useLockTaskInDeviceOwner
-            )
-        }
-
         promoteToForeground(syncedState)
-        scheduleExactPhaseAlarm(syncedState)
+        scheduleDozeSafePhaseAlarm(syncedState)
         startTickerLoop()
     }
 
     private fun handlePauseOrResume() {
         val app = application as RegainFocusApplication
         val state = app.container.activeSessionStore.readSnapshotSync()
-        // STRICT INVARIANT: Never allow pausing an active Strict Session!
         if (!state.isActive || state.isStrictActive) return
 
         val nowWall = System.currentTimeMillis()
@@ -171,7 +156,7 @@ class FocusTimerService : Service() {
                         } else state.accumulatedBreakMillis
                     )
                 }
-                cancelExactPhaseAlarm()
+                cancelPhaseAlarm()
                 app.container.activeSessionStore.saveState(updated)
                 syncAudioWithSettings()
                 updateOngoingNotification(updated, rem)
@@ -195,7 +180,7 @@ class FocusTimerService : Service() {
                     )
                 }
                 app.container.activeSessionStore.saveState(updated)
-                scheduleExactPhaseAlarm(updated)
+                scheduleDozeSafePhaseAlarm(updated)
                 startTickerLoop()
             }
         }
@@ -204,7 +189,6 @@ class FocusTimerService : Service() {
     private fun handleStopFlexible() {
         val app = application as RegainFocusApplication
         val state = app.container.activeSessionStore.readSnapshotSync()
-        // STRICT INVARIANT: Cannot stop early during Strict Mode!
         if (!state.isActive || state.isStrictActive) return
 
         serviceScope.launch {
@@ -279,12 +263,11 @@ class FocusTimerService : Service() {
                 _liveDisplayMillis.value = displayMillis
                 _liveStrictRemainingMillis.value = strictTotalRem
 
-                // Secondary foreground package watchdog via UsageStatsManager
+                // Real-time UsageStatsManager foreground blocker watchdog (350ms cadence)
                 if (state.isActive && (!state.isPaused || state.isStrictActive)) {
-                    runSecondaryForegroundWatchdog(state, nowWall, nowElapsed, bootId)
+                    runForegroundBlockerWatchdog(state, nowWall, nowElapsed, bootId)
                 }
 
-                // Check phase/session completion
                 if (state.timerMode == TimerModeType.STOPWATCH) {
                     if (state.isStrictActive && strictTotalRem <= 0L) {
                         val completedStopwatch = state.copy(accumulatedWorkMillis = displayMillis)
@@ -304,20 +287,20 @@ class FocusTimerService : Service() {
                     updateOngoingNotification(state, notifMillis)
                 }
 
-                delay(500L)
+                delay(350L)
             }
         }
     }
 
-    private suspend fun runSecondaryForegroundWatchdog(
+    private suspend fun runForegroundBlockerWatchdog(
         state: PersistedTimerSessionState,
         nowWall: Long,
         nowElapsed: Long,
         bootId: String
     ) {
         val app = application as RegainFocusApplication
-        val fg = app.container.usageRepository.getRecentForegroundPackage(lookbackMillis = 2_500L) ?: return
-        val (fgPkg, fgCls) = fg
+        val fg = app.container.usageRepository.getRecentForegroundPackage() ?: return
+        val (fgPkg, _) = fg
         if (fgPkg == packageName) return
 
         val enabledLimits = app.container.database.appLimitDao().getEnabledLimitsOnce()
@@ -326,7 +309,6 @@ class FocusTimerService : Service() {
         val decision = StrictBlockerPolicyEngine.evaluateForegroundEvent(
             selfPackageName = packageName,
             foregroundPackage = fgPkg,
-            foregroundClassName = fgCls,
             launcherPackages = app.container.usageRepository.getLauncherPackages(),
             imePackages = app.container.usageRepository.getImePackages(),
             sessionState = state,
@@ -337,13 +319,33 @@ class FocusTimerService : Service() {
         )
 
         if (decision is StrictBlockerPolicyEngine.InterceptionDecision.BlockApp) {
+            val shouldRecord = decision.packageName != lastWatchdogInterceptPkg ||
+                (nowElapsed - lastWatchdogInterceptElapsed) > 1_800L
+
+            if (shouldRecord) {
+                lastWatchdogInterceptPkg = decision.packageName
+                lastWatchdogInterceptElapsed = nowElapsed
+
+                if (!app.container.deviceOwnerManager.isAccessibilityEnabled()) {
+                    val updated = state.copy(interceptionCount = state.interceptionCount + 1)
+                    app.container.activeSessionStore.saveState(updated)
+                    val label = app.container.usageRepository.getAppLabel(decision.packageName)
+                    app.container.productivityRepository.recordInterception(
+                        sessionId = state.sessionId.takeIf { it > 0L },
+                        packageName = decision.packageName,
+                        appLabel = label,
+                        level = state.strictLevel
+                    )
+                }
+            }
+
             StrictBlockShieldActivity.launch(
                 context = this@FocusTimerService,
                 blockedPackage = decision.packageName,
                 reasonLabel = if (state.isStrictActive) {
-                    "Locked by active Strict Focus Session (${state.strictLevel.badge})."
+                    "Restricted during your active Strict Focus Session."
                 } else {
-                    "Restricted during active Focus Session."
+                    "Paused during your active Focus Session."
                 }
             )
         }
@@ -371,7 +373,6 @@ class FocusTimerService : Service() {
             return true
         }
 
-        // Pomodoro transition
         val transition = PomodoroPhaseEngine.nextPomodoroPhase(
             currentPhase = state.phase,
             currentCycle = state.currentCycle,
@@ -405,7 +406,7 @@ class FocusTimerService : Service() {
             accumulatedBreakMillis = updatedBreak
         )
         app.container.activeSessionStore.saveState(nextState)
-        scheduleExactPhaseAlarm(nextState)
+        scheduleDozeSafePhaseAlarm(nextState)
         syncAudioWithSettings()
 
         if (settings.enableBreakReminders || settings.enableSessionNotifications) {
@@ -433,12 +434,8 @@ class FocusTimerService : Service() {
     ) {
         val app = application as RegainFocusApplication
         soundSynthesizer.stop()
-        cancelExactPhaseAlarm()
+        cancelPhaseAlarm()
 
-        // 1. Release all Mode B Device Owner restrictions & package suspensions immediately
-        app.container.deviceOwnerManager.releaseAllDeviceOwnerRestrictions(finalState.blockedPackages)
-
-        // 2. Persist verified FocusSessionEntity to Room Database
         val nowWall = System.currentTimeMillis()
         val plannedWorkSec = when (finalState.timerMode) {
             TimerModeType.POMODORO -> (finalState.workDurationMillis * finalState.totalCycles) / 1000L
@@ -476,19 +473,17 @@ class FocusTimerService : Service() {
             )
         }
 
-        // 3. Clear active session store so apps unlock immediately
         app.container.activeSessionStore.clearSession()
         _liveDisplayMillis.value = 0L
         _liveStrictRemainingMillis.value = 0L
 
-        // 4. Notify user of session completion
         val settings = app.container.productivityRepository.settingsFlow.first()
         if (settings.enableSessionNotifications && outcome != SessionOutcome.STOPPED_EARLY) {
             val mins = (effectiveWorkSec / 60L).coerceAtLeast(1L)
             app.container.notificationHelper.notifyPhaseOrSessionAlert(
                 title = "Focus Session Complete! 🎉",
                 message = "You completed ${mins}m of ${finalState.sessionTag} focus" +
-                    (if (finalState.blockedPackages.isNotEmpty()) " and unlocked ${finalState.blockedPackages.size} apps." else ".")
+                    (if (finalState.blockedPackages.isNotEmpty()) " and restored ${finalState.blockedPackages.size} apps." else ".")
             )
         }
 
@@ -542,7 +537,7 @@ class FocusTimerService : Service() {
         nm.notify(NotificationHelper.ONGOING_NOTIFICATION_ID, notification)
     }
 
-    private fun scheduleExactPhaseAlarm(state: PersistedTimerSessionState) {
+    private fun scheduleDozeSafePhaseAlarm(state: PersistedTimerSessionState) {
         if (!state.isActive || state.isPaused || state.timerMode == TimerModeType.STOPWATCH) return
         val am = getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
         val triggerWall = if (state.isStrictActive) {
@@ -560,17 +555,10 @@ class FocusTimerService : Service() {
             },
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
-
-        runCatching {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !am.canScheduleExactAlarms()) {
-                am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerWall, pi)
-            } else {
-                am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerWall, pi)
-            }
-        }
+        runCatching { am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerWall, pi) }
     }
 
-    private fun cancelExactPhaseAlarm() {
+    private fun cancelPhaseAlarm() {
         val am = getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
         val pi = PendingIntent.getBroadcast(
             this,
@@ -588,11 +576,10 @@ class FocusTimerService : Service() {
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        // Keep session alive if user swipes RegainFocus from Recents!
         val app = application as RegainFocusApplication
         val state = app.container.activeSessionStore.readSnapshotSync()
         if (state.isActive) {
-            scheduleExactPhaseAlarm(state)
+            scheduleDozeSafePhaseAlarm(state)
         }
         super.onTaskRemoved(rootIntent)
     }

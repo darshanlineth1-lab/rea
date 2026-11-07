@@ -1,7 +1,6 @@
 package com.regainfocus.app.ui.screens
 
 import android.Manifest
-import android.app.admin.DevicePolicyManager
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -25,8 +24,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material.icons.filled.Shield
@@ -44,6 +43,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -57,8 +57,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import com.regainfocus.app.RegainFocusApplication
 import com.regainfocus.app.domain.model.DeviceEnforcementStatus
+import com.regainfocus.app.ui.components.ProminentPermissionDisclosureDialog
+import com.regainfocus.app.ui.components.SensitivePermissionType
 import com.regainfocus.app.ui.theme.AuroraCyan
 import com.regainfocus.app.ui.theme.AuroraEmerald
 import com.regainfocus.app.util.TimeFormatters
@@ -68,11 +69,10 @@ import kotlin.math.roundToInt
 fun OnboardingScreen(
     enforcementStatus: DeviceEnforcementStatus,
     onRefreshPermissions: () -> Unit,
+    onRequestPermissionWithDisclosure: (SensitivePermissionType) -> Unit,
     onComplete: (dailyFocusMinutes: Int, dailyScreenGoalMinutes: Int) -> Unit
 ) {
-    val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val app = context.applicationContext as RegainFocusApplication
 
     var focusGoalSlider by remember { mutableFloatStateOf(120f) }
     var screenBudgetSlider by remember { mutableFloatStateOf(180f) }
@@ -138,7 +138,6 @@ fun OnboardingScreen(
             }
         }
 
-        // Goal Setup Card
         Card(
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -189,7 +188,6 @@ fun OnboardingScreen(
             }
         }
 
-        // Permissions Setup Card
         Card(
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -199,12 +197,12 @@ fun OnboardingScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "2. Enable Core Protections",
+                    text = "2. Optional Focus & Screen-Time Permissions",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "RegainFocus has zero internet permission — your app usage and sessions never leave this phone.",
+                    text = "RegainFocus declares zero INTERNET permission. Each sensitive permission shows a clear disclosure before opening Android Settings.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -212,22 +210,34 @@ fun OnboardingScreen(
                 PermissionSetupRow(
                     icon = Icons.Default.QueryStats,
                     title = "Screen-Time Usage Access",
-                    subtitle = "Reads real per-app daily & weekly screen time",
+                    subtitle = "Reads per-app screen time & foreground package opens locally",
                     isGranted = enforcementStatus.hasUsageStatsPermission,
                     onGrant = {
-                        context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
+                        onRequestPermissionWithDisclosure(SensitivePermissionType.USAGE_ACCESS)
                     }
                 )
 
-                PermissionSetupRow(
-                    icon = Icons.Default.Shield,
-                    title = "Accessibility Focus Blocker",
-                    subtitle = "Required for Strict App Blocking & Shorts/Reels Shield",
-                    isGranted = enforcementStatus.isAccessibilityServiceEnabled,
-                    onGrant = {
-                        context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-                    }
-                )
+                if (enforcementStatus.supportsAccessibilityBlocker) {
+                    PermissionSetupRow(
+                        icon = Icons.Default.Shield,
+                        title = "Accessibility Focus Shield",
+                        subtitle = "Detects blocked app launches (no screen content reading)",
+                        isGranted = enforcementStatus.isAccessibilityServiceEnabled,
+                        onGrant = {
+                            onRequestPermissionWithDisclosure(SensitivePermissionType.ACCESSIBILITY_SHIELD)
+                        }
+                    )
+                } else {
+                    PermissionSetupRow(
+                        icon = Icons.Default.Layers,
+                        title = "Focus Shield Display (Over Other Apps)",
+                        subtitle = "Allows showing your Focus Countdown Shield over blocked apps",
+                        isGranted = enforcementStatus.canDrawOverlays,
+                        onGrant = {
+                            onRequestPermissionWithDisclosure(SensitivePermissionType.OVERLAY_SHIELD)
+                        }
+                    )
+                }
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     PermissionSetupRow(
@@ -240,26 +250,6 @@ fun OnboardingScreen(
                         }
                     )
                 }
-
-                PermissionSetupRow(
-                    icon = Icons.Default.AdminPanelSettings,
-                    title = "Device Admin Tamper Guard (Optional)",
-                    subtitle = "Adds extra uninstall resistance during Strict Mode",
-                    isGranted = enforcementStatus.isDeviceAdminActive || enforcementStatus.isDeviceOwnerApp,
-                    onGrant = {
-                        val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
-                            putExtra(
-                                DevicePolicyManager.EXTRA_DEVICE_ADMIN,
-                                app.container.deviceOwnerManager.adminComponent
-                            )
-                            putExtra(
-                                DevicePolicyManager.EXTRA_ADD_EXPLANATION,
-                                "Helps protect active Strict Focus Sessions from impulsive uninstallation."
-                            )
-                        }
-                        runCatching { context.startActivity(intent) }
-                    }
-                )
             }
         }
 
@@ -334,7 +324,7 @@ private fun PermissionSetupRow(
                     onClick = onGrant,
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    Text("Enable", style = MaterialTheme.typography.labelMedium)
+                    Text("Review", style = MaterialTheme.typography.labelMedium)
                 }
             }
         }

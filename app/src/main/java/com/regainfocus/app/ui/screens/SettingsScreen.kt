@@ -1,12 +1,6 @@
 package com.regainfocus.app.ui.screens
 
-import android.app.admin.DevicePolicyManager
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.content.Intent
 import android.net.Uri
-import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -26,11 +20,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.AlertDialog
@@ -43,7 +35,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -56,16 +47,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.regainfocus.app.RegainFocusApplication
-import com.regainfocus.app.blocker.DeviceOwnerEnforcementManager
+import com.regainfocus.app.BuildConfig
 import com.regainfocus.app.domain.model.DeviceEnforcementStatus
 import com.regainfocus.app.domain.model.PersistedTimerSessionState
 import com.regainfocus.app.domain.model.ThemeMode
 import com.regainfocus.app.domain.model.UserSettings
-import com.regainfocus.app.ui.theme.AuroraCyan
+import com.regainfocus.app.ui.components.SensitivePermissionType
 import com.regainfocus.app.ui.theme.AuroraEmerald
 import com.regainfocus.app.ui.theme.StrictCrimson
 import com.regainfocus.app.util.TimeFormatters
@@ -78,6 +67,7 @@ fun SettingsScreen(
     settings: UserSettings,
     activeSession: PersistedTimerSessionState,
     enforcementStatus: DeviceEnforcementStatus,
+    onRequestPermissionWithDisclosure: (SensitivePermissionType) -> Unit,
     onUpdateTheme: (ThemeMode) -> Unit,
     onUpdateSettings: (requiresUnlockedStrict: Boolean, (UserSettings) -> UserSettings) -> Unit,
     onExportJson: suspend () -> String,
@@ -86,7 +76,6 @@ fun SettingsScreen(
     onPostMessage: (String) -> Unit
 ) {
     val context = LocalContext.current
-    val app = context.applicationContext as RegainFocusApplication
     val scope = rememberCoroutineScope()
 
     var showClearConfirm by remember { mutableStateOf(false) }
@@ -134,7 +123,7 @@ fun SettingsScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "Settings & Strict Controls",
+            text = "Settings & Privacy",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
@@ -226,7 +215,7 @@ fun SettingsScreen(
             }
         }
 
-        // 3. Strict Blocking & Permissions Status
+        // 3. Permissions & Consent Center
         Card(
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -238,142 +227,38 @@ fun SettingsScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Security, contentDescription = null, tint = AuroraEmerald)
                     Spacer(Modifier.width(8.dp))
-                    Text("Strict Blocking & Permissions", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Text("Permissions & Consent Disclosures", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 }
 
                 PermissionActionRow(
-                    label = "Accessibility App Blocker (Mode A)",
-                    granted = enforcementStatus.isAccessibilityServiceEnabled,
-                    onClick = { context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
-                )
-                PermissionActionRow(
-                    label = "Usage Access (Screen Time & Watchdog)",
+                    label = "Usage Access (Screen Time & App Detection)",
                     granted = enforcementStatus.hasUsageStatsPermission,
-                    onClick = { context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
-                )
-                PermissionActionRow(
-                    label = "Display Over Other Apps",
-                    granted = enforcementStatus.canDrawOverlays,
                     onClick = {
-                        val intent = Intent(
-                            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                            Uri.parse("package:${context.packageName}")
-                        )
-                        runCatching { context.startActivity(intent) }
+                        onRequestPermissionWithDisclosure(SensitivePermissionType.USAGE_ACCESS)
                     }
                 )
-                PermissionActionRow(
-                    label = "Device Admin Protection",
-                    granted = enforcementStatus.isDeviceAdminActive || enforcementStatus.isDeviceOwnerApp,
-                    onClick = {
-                        val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
-                            putExtra(
-                                DevicePolicyManager.EXTRA_DEVICE_ADMIN,
-                                app.container.deviceOwnerManager.adminComponent
-                            )
+
+                if (enforcementStatus.supportsAccessibilityBlocker) {
+                    PermissionActionRow(
+                        label = "Accessibility Focus Shield (Package-Only)",
+                        granted = enforcementStatus.isAccessibilityServiceEnabled,
+                        onClick = {
+                            onRequestPermissionWithDisclosure(SensitivePermissionType.ACCESSIBILITY_SHIELD)
                         }
-                        runCatching { context.startActivity(intent) }
-                    }
-                )
-
-                SettingToggleRow(
-                    title = "Guard System Settings During Strict Mode",
-                    subtitle = "Intercepts App Info / Accessibility / Date-Time Settings while Strict Mode is locked",
-                    checked = settings.guardSettingsDuringStrict,
-                    enabled = !activeSession.isStrictActive,
-                    onCheckedChange = { v ->
-                        onUpdateSettings(true) { it.copy(guardSettingsDuringStrict = v) }
-                    }
-                )
-
-                SettingToggleRow(
-                    title = "Block Split-Screen & Pop-Up Windows",
-                    subtitle = "Scans all interactive multi-window layers during active Focus",
-                    checked = settings.blockSplitScreenDuringStrict,
-                    enabled = !activeSession.isStrictActive,
-                    onCheckedChange = { v ->
-                        onUpdateSettings(true) { it.copy(blockSplitScreenDuringStrict = v) }
-                    }
-                )
-            }
-        }
-
-        // 4. Mode B: Dedicated Device Owner Provisioning Center
-        Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Column(
-                modifier = Modifier.padding(18.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Lock, contentDescription = null, tint = AuroraCyan)
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = "Mode B: Dedicated Device Owner",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
+                    )
+                } else {
+                    PermissionActionRow(
+                        label = "Focus Shield Display (Over Other Apps)",
+                        granted = enforcementStatus.canDrawOverlays,
+                        onClick = {
+                            onRequestPermissionWithDisclosure(SensitivePermissionType.OVERLAY_SHIELD)
+                        }
                     )
                 }
-
-                Text(
-                    text = if (enforcementStatus.isDeviceOwnerApp) {
-                        "ACTIVE: This device is provisioned as a Managed Device Owner! Mode B sessions will OS-suspend blocked apps and disable Force-Stop & Uninstall."
-                    } else {
-                        "NOT PROVISIONED: On dedicated study devices (with accounts temporarily removed), you can optionally grant OS-level Device Owner power via ADB:"
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (enforcementStatus.isDeviceOwnerApp) AuroraEmerald else MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.surface
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = DeviceOwnerEnforcementManager.ADB_PROVISION_COMMAND,
-                            style = MaterialTheme.typography.bodySmall,
-                            fontFamily = FontFamily.Monospace,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        OutlinedButton(
-                            onClick = {
-                                val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                cm.setPrimaryClip(
-                                    ClipData.newPlainText(
-                                        "ADB Device Owner Command",
-                                        DeviceOwnerEnforcementManager.ADB_PROVISION_COMMAND
-                                    )
-                                )
-                                onPostMessage("Copied ADB Device Owner command to clipboard.")
-                            }
-                        ) {
-                            Icon(Icons.Default.ContentCopy, contentDescription = "Copy", modifier = Modifier.size(16.dp))
-                        }
-                    }
-                }
-
-                SettingToggleRow(
-                    title = "Enable Lock Task Kiosk Pinning in Mode B",
-                    subtitle = "Allows pinning RegainFocus in OS Lock Task Mode during Device Owner sessions",
-                    checked = settings.useLockTaskInDeviceOwner,
-                    enabled = !activeSession.isStrictActive,
-                    onCheckedChange = { v ->
-                        onUpdateSettings(true) { it.copy(useLockTaskInDeviceOwner = v) }
-                    }
-                )
             }
         }
 
-        // 5. Notifications & Study Reminders
+        // 4. Notifications & Study Reminders
         Card(
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -414,7 +299,7 @@ fun SettingsScreen(
             }
         }
 
-        // 6. Data Management & Local Privacy
+        // 5. Data Management & Local Privacy
         Card(
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -463,7 +348,7 @@ fun SettingsScreen(
             }
         }
 
-        // 7. Privacy & About
+        // 6. Privacy & Build Audit Card
         Card(
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -475,14 +360,14 @@ fun SettingsScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.PrivacyTip, contentDescription = null, tint = AuroraEmerald)
                     Spacer(Modifier.width(8.dp))
-                    Text("Privacy & Open-Source Architecture", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Text("Privacy & Minimum-Privilege Architecture", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 }
                 Text(
-                    text = "RegainFocus v1.0.0 · 100% Local-First Android Application.\n" +
-                        "• Zero INTERNET permission declared in AndroidManifest.xml.\n" +
-                        "• Zero analytics trackers, zero ads, zero paid subscriptions.\n" +
-                        "• Accessibility Service inspects only foreground package/window IDs to enforce user-configured app shields.\n" +
-                        "• Built with Kotlin, Jetpack Compose, Material 3, Room, DataStore & WorkManager, extending open-source foundation Focus-Modes-App (MIT License).",
+                    text = "RegainFocus v${BuildConfig.VERSION_NAME} · 100% Local-First Android Application.\n" +
+                        "• Zero INTERNET and zero ACCESS_NETWORK_STATE permissions in AndroidManifest.xml.\n" +
+                        "• Zero SMS, Contacts, Microphone, Camera, Location, or Notification-Listener permissions.\n" +
+                        "• Narrow Android 11+ <queries> visibility (no QUERY_ALL_PACKAGES).\n" +
+                        "• Built with Kotlin, Jetpack Compose, Material 3, Room, DataStore & WorkManager (MIT foundation: Focus-Modes-App).",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -557,11 +442,11 @@ private fun PermissionActionRow(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.CheckCircle, contentDescription = null, tint = AuroraEmerald, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(4.dp))
-                Text("Active", style = MaterialTheme.typography.labelMedium, color = AuroraEmerald)
+                Text("Granted", style = MaterialTheme.typography.labelMedium, color = AuroraEmerald)
             }
         } else {
             OutlinedButton(onClick = onClick, shape = RoundedCornerShape(10.dp)) {
-                Text("Configure", style = MaterialTheme.typography.labelSmall)
+                Text("Review & Grant", style = MaterialTheme.typography.labelSmall)
             }
         }
     }

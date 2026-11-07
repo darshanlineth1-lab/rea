@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!--
+          Play Store / ADB Distribution Flavor:
+          Declares a strictly minimized, Google Play policy-compliant AccessibilityService
+          (canRetrieveWindowContent="false", typeWindowStateChanged only, zero screen-text reading)
+          gated behind a mandatory two-button Prominent In-App Disclosure dialog.
+          Does NOT request SYSTEM_ALERT_WINDOW.
+        -->
+        <service
+            android:name=".service.StrictAppBlockerAccessibilityService"
+            android:directBootAware="true"
+            android:enabled="true"
+            android:exported="true"
+            android:label="@string/accessibility_service_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+    </application>
+
+</manifest>

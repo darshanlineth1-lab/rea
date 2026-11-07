@@ -98,9 +98,9 @@ fun HomeScreen(
     onQuickStartFocus: (minutes: Int, group: BlockingGroupEntity?) -> Unit,
     onAddHabit: (title: String, category: String, targetMinutes: Int) -> Unit,
     onToggleHabitToday: (HabitEntity) -> Unit,
-    onArchiveHabit: (Long) -> Unit
+    onArchiveHabit: (Long) -> Unit,
+    onRequestUsageAccess: () -> Unit
 ) {
-    val context = LocalContext.current
     val zone = ZoneId.systemDefault()
     val today = LocalDate.now(zone)
     val todayEpoch = today.toEpochDay()
@@ -379,10 +379,10 @@ fun HomeScreen(
                     )
                     Spacer(Modifier.height(8.dp))
                     OutlinedButton(
-                        onClick = { context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) },
+                        onClick = onRequestUsageAccess,
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Grant Usage Access")
+                        Text("Review & Grant Usage Access")
                     }
                 } else {
                     val usedMins = (screenTimeOverview.todayTotalMillis / 60_000L).toInt()

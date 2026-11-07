@@ -30,6 +30,7 @@ import com.regainfocus.app.domain.model.TimerModeType
 import com.regainfocus.app.domain.model.TimerPhase
 import com.regainfocus.app.domain.model.UserSettings
 import com.regainfocus.app.service.FocusTimerService
+import com.regainfocus.app.ui.components.SensitivePermissionType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -176,6 +177,21 @@ class RegainMainViewModel(application: Application) : AndroidViewModel(applicati
         _snackbarMessage.value = msg
     }
 
+    fun recordPermissionDisclosureConsent(type: SensitivePermissionType) {
+        viewModelScope.launch {
+            repo.updateSettings { current ->
+                when (type) {
+                    SensitivePermissionType.USAGE_ACCESS ->
+                        current.copy(hasAcceptedUsageAccessDisclosure = true)
+                    SensitivePermissionType.OVERLAY_SHIELD ->
+                        current.copy(hasAcceptedOverlayDisclosure = true)
+                    SensitivePermissionType.ACCESSIBILITY_SHIELD ->
+                        current.copy(hasAcceptedAccessibilityDisclosure = true)
+                }
+            }
+        }
+    }
+
     fun refreshPermissionsAndData(forceAppsReload: Boolean = false) {
         _enforcementStatus.value = container.deviceOwnerManager.getEnforcementStatus(
             container.notificationHelper.hasNotificationPermission()
@@ -216,9 +232,6 @@ class RegainMainViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
-    /**
-     * Starts a verified Focus Session (Flexible, Mode A Standard Strict, or Mode B Device Owner Strict).
-     */
     fun startFocusSession(
         mode: TimerModeType,
         workMinutes: Int,
@@ -228,7 +241,6 @@ class RegainMainViewModel(application: Application) : AndroidViewModel(applicati
         strictLevel: StrictEnforcementLevel,
         selectedGroup: BlockingGroupEntity?,
         extraSelectedPackages: Set<String>,
-        blockShortsAndReels: Boolean,
         sessionTag: String,
         sessionNote: String
     ): Boolean {
@@ -242,17 +254,15 @@ class RegainMainViewModel(application: Application) : AndroidViewModel(applicati
             container.notificationHelper.hasNotificationPermission()
         )
 
-        if (strictLevel == StrictEnforcementLevel.STANDARD_STRICT && !status.isAccessibilityServiceEnabled) {
-            _snackbarMessage.value = "Enable RegainFocus Accessibility Blocker first to activate Mode A Strict Blocking."
+        if (strictLevel != StrictEnforcementLevel.NONE && !status.isBlockerReady) {
+            _snackbarMessage.value = if (status.supportsAccessibilityBlocker) {
+                "Review and enable the Accessibility Focus Shield first to activate Strict Mode."
+            } else {
+                "Enable Usage Access and Display Over Other Apps first to activate Strict Mode."
+            }
             return false
         }
 
-        if (strictLevel == StrictEnforcementLevel.DEVICE_OWNER_STRICT && !status.isDeviceOwnerApp) {
-            _snackbarMessage.value = "Device Owner is not provisioned yet. Provision via ADB or select Mode A Standard Strict."
-            return false
-        }
-
-        val currentSettings = settings.value
         val nowWall = System.currentTimeMillis()
         val nowElapsed = SystemClock.elapsedRealtime()
         val bootId = ActiveStrictSessionStore.currentBootCountId(app)
@@ -275,6 +285,12 @@ class RegainMainViewModel(application: Application) : AndroidViewModel(applicati
             addAll(extraSelectedPackages)
         }
 
+        val normalizedStrict = if (strictLevel == StrictEnforcementLevel.NONE) {
+            StrictEnforcementLevel.NONE
+        } else {
+            StrictEnforcementLevel.STANDARD_STRICT
+        }
+
         val newState = PersistedTimerSessionState(
             isActive = true,
             sessionId = nowWall,
@@ -287,8 +303,8 @@ class RegainMainViewModel(application: Application) : AndroidViewModel(applicati
             phaseEndWallMillis = if (mode == TimerModeType.STOPWATCH) 0L else nowWall + workMillis,
             bootAnchorId = bootId,
             phaseEndElapsedRealtimeMillis = if (mode == TimerModeType.STOPWATCH) 0L else nowElapsed + workMillis,
-            strictHardEndWallMillis = if (strictLevel != StrictEnforcementLevel.NONE) nowWall + totalStrictMillis else 0L,
-            strictHardEndElapsedRealtimeMillis = if (strictLevel != StrictEnforcementLevel.NONE) nowElapsed + totalStrictMillis else 0L,
+            strictHardEndWallMillis = if (normalizedStrict != StrictEnforcementLevel.NONE) nowWall + totalStrictMillis else 0L,
+            strictHardEndElapsedRealtimeMillis = if (normalizedStrict != StrictEnforcementLevel.NONE) nowElapsed + totalStrictMillis else 0L,
             stopwatchBaseElapsedRealtimeMillis = if (mode == TimerModeType.STOPWATCH) nowElapsed else 0L,
             stopwatchAccumulatedMillis = 0L,
             workDurationMillis = workMillis,
@@ -298,12 +314,8 @@ class RegainMainViewModel(application: Application) : AndroidViewModel(applicati
             totalCycles = safeCycles,
             accumulatedWorkMillis = 0L,
             accumulatedBreakMillis = 0L,
-            strictLevel = strictLevel,
+            strictLevel = normalizedStrict,
             blockedPackages = combinedPackages,
-            blockShortsAndReels = blockShortsAndReels || (selectedGroup?.blockShortsAndReels == true),
-            guardSettings = currentSettings.guardSettingsDuringStrict,
-            blockSplitScreen = currentSettings.blockSplitScreenDuringStrict,
-            useLockTaskInDeviceOwner = currentSettings.useLockTaskInDeviceOwner,
             blockingGroupId = selectedGroup?.id,
             blockingGroupName = selectedGroup?.name,
             sessionTag = sessionTag.ifBlank { "Study" },

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+      Sideload Distribution Flavor:
+      Does NOT declare BIND_ACCESSIBILITY_SERVICE (avoiding Google Play Protect Enhanced Fraud
+      Protection's automatic block on internet-sideloaded APKs). Instead, requests user-consented
+      SYSTEM_ALERT_WINDOW so FocusTimerService is permitted by Android 10-15 Background Activity
+      Launch rules to display StrictBlockShieldActivity when UsageStatsManager detects a blocked app.
+    -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+</manifest>

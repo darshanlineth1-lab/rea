@@ -22,8 +22,9 @@ enum class TimerPhase(val label: String) {
 @Serializable
 enum class StrictEnforcementLevel(val title: String, val badge: String) {
     NONE("Flexible Mode", "Flexible"),
-    STANDARD_STRICT("Mode A: Standard Strict", "Strict · Mode A"),
-    DEVICE_OWNER_STRICT("Mode B: Device Owner", "Device Owner · Mode B")
+    STANDARD_STRICT("Strict Focus Mode", "Strict Locked"),
+    // Retained only for backward-compatible JSON deserialization of older session records
+    DEVICE_OWNER_STRICT("Strict Focus Mode", "Strict Locked")
 }
 
 @Serializable
@@ -54,6 +55,9 @@ enum class ThemeMode(val label: String) {
 @Serializable
 data class UserSettings(
     val hasCompletedOnboarding: Boolean = false,
+    val hasAcceptedUsageAccessDisclosure: Boolean = false,
+    val hasAcceptedOverlayDisclosure: Boolean = false,
+    val hasAcceptedAccessibilityDisclosure: Boolean = false,
     val themeMode: ThemeMode = ThemeMode.DARK_AURORA,
     val dailyFocusGoalMinutes: Int = 120,
     val dailyScreenTimeGoalMinutes: Int = 180,
@@ -68,9 +72,6 @@ data class UserSettings(
     val soundVolume: Float = 0.55f,
     val playSoundDuringBreaks: Boolean = false,
     val defaultStrictLevel: StrictEnforcementLevel = StrictEnforcementLevel.STANDARD_STRICT,
-    val guardSettingsDuringStrict: Boolean = true,
-    val blockSplitScreenDuringStrict: Boolean = true,
-    val useLockTaskInDeviceOwner: Boolean = false,
     val enableSessionNotifications: Boolean = true,
     val enableBreakReminders: Boolean = true,
     val enableDailyGoalReminder: Boolean = true,
@@ -90,7 +91,6 @@ data class PersistedTimerSessionState(
     val phaseStartWallMillis: Long = 0L,
     val phaseEndWallMillis: Long = 0L,
     val phaseDurationMillis: Long = 0L,
-    // Monotonic boot-session anti-clock-tamper anchor
     val bootAnchorId: String = "",
     val phaseEndElapsedRealtimeMillis: Long = 0L,
     val strictHardEndWallMillis: Long = 0L,
@@ -107,10 +107,6 @@ data class PersistedTimerSessionState(
     val accumulatedBreakMillis: Long = 0L,
     val strictLevel: StrictEnforcementLevel = StrictEnforcementLevel.NONE,
     val blockedPackages: Set<String> = emptySet(),
-    val blockShortsAndReels: Boolean = false,
-    val guardSettings: Boolean = true,
-    val blockSplitScreen: Boolean = true,
-    val useLockTaskInDeviceOwner: Boolean = false,
     val blockingGroupId: Long? = null,
     val blockingGroupName: String? = null,
     val sessionTag: String = "Study",
@@ -154,7 +150,7 @@ data class ScreenTimeOverview(
     val weeklyTotalMillis: Long,
     val monthlyTotalMillis: Long,
     val dailyAverageWeekMillis: Long,
-    val hourlyMinutesToday: List<Int>, // 24 buckets (0..23)
+    val hourlyMinutesToday: List<Int>,
     val topAppsToday: List<AppUsageItem>,
     val topAppsWeek: List<AppUsageItem>,
     val topAppsMonth: List<AppUsageItem>,
@@ -176,14 +172,24 @@ data class AchievementProgress(
 }
 
 data class DeviceEnforcementStatus(
+    val supportsAccessibilityBlocker: Boolean,
     val hasUsageStatsPermission: Boolean,
     val isAccessibilityServiceEnabled: Boolean,
     val canDrawOverlays: Boolean,
-    val hasNotificationPermission: Boolean,
-    val isDeviceAdminActive: Boolean,
-    val isDeviceOwnerApp: Boolean,
-    val isInLockTaskMode: Boolean
-)
+    val hasNotificationPermission: Boolean
+) {
+    /**
+     * In the `playstore` flavor, app blocking is ready when AccessibilityService is enabled.
+     * In the `sideload` flavor (no AccessibilityService), app blocking uses UsageStatsManager +
+     * Display Over Other Apps (`canDrawOverlays`) so the foreground timer service can show the shield.
+     */
+    val isBlockerReady: Boolean
+        get() = if (supportsAccessibilityBlocker) {
+            isAccessibilityServiceEnabled
+        } else {
+            hasUsageStatsPermission && canDrawOverlays
+        }
+}
 
 @Serializable
 data class BackupSessionItem(
@@ -211,7 +217,7 @@ data class BackupBlockingGroupItem(
     val blockedPackages: List<String>,
     val defaultDurationMinutes: Int,
     val strictByDefault: Boolean,
-    val blockShortsAndReels: Boolean
+    val blockShortsAndReels: Boolean = false
 )
 
 @Serializable

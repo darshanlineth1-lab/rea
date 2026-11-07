@@ -1,7 +1,9 @@
 package com.regainfocus.app
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -35,11 +37,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.regainfocus.app.domain.model.StrictEnforcementLevel
 import com.regainfocus.app.domain.model.TimerModeType
+import com.regainfocus.app.ui.components.ProminentPermissionDisclosureDialog
+import com.regainfocus.app.ui.components.SensitivePermissionType
 import com.regainfocus.app.ui.screens.AppsScreen
 import com.regainfocus.app.ui.screens.FocusScreen
 import com.regainfocus.app.ui.screens.HomeScreen
@@ -73,15 +78,6 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val settings by viewModel.settings.collectAsState()
-            val activeSession by viewModel.activeSession.collectAsState()
-
-            // Automatically exit Lock Task kiosk pinning if a Mode B session just completed
-            LaunchedEffect(activeSession.isActive) {
-                if (!activeSession.isActive) {
-                    (application as RegainFocusApplication).container.deviceOwnerManager
-                        .stopLockTaskIfActive(this@MainActivity)
-                }
-            }
 
             RegainFocusTheme(themeMode = settings.themeMode) {
                 RegainAppRoot(
@@ -110,6 +106,7 @@ private fun RegainAppRoot(
     externalTabRoute: String?,
     onConsumedExternalTab: () -> Unit
 ) {
+    val context = LocalContext.current
     val settings by viewModel.settings.collectAsState()
     val activeSession by viewModel.activeSession.collectAsState()
     val liveDisplayMillis by viewModel.liveDisplayMillis.collectAsState()
@@ -131,6 +128,33 @@ private fun RegainAppRoot(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val lifecycleOwner = LocalLifecycleOwner.current
+
+    // Centralized Prominent Disclosure state — guarantees no system permission settings page
+    // is ever opened without first presenting a two-button standalone disclosure dialog.
+    var pendingDisclosurePermission by remember { mutableStateOf<SensitivePermissionType?>(null) }
+
+    pendingDisclosurePermission?.let { permType ->
+        ProminentPermissionDisclosureDialog(
+            permissionType = permType,
+            onAcceptAndOpenSettings = {
+                viewModel.recordPermissionDisclosureConsent(permType)
+                pendingDisclosurePermission = null
+                val intent = when (permType) {
+                    SensitivePermissionType.USAGE_ACCESS ->
+                        Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+                    SensitivePermissionType.OVERLAY_SHIELD ->
+                        Intent(
+                            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:${context.packageName}")
+                        )
+                    SensitivePermissionType.ACCESSIBILITY_SHIELD ->
+                        Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                }
+                runCatching { context.startActivity(intent) }
+            },
+            onDecline = { pendingDisclosurePermission = null }
+        )
+    }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -154,6 +178,7 @@ private fun RegainAppRoot(
         OnboardingScreen(
             enforcementStatus = enforcementStatus,
             onRefreshPermissions = { viewModel.refreshPermissionsAndData() },
+            onRequestPermissionWithDisclosure = { pendingDisclosurePermission = it },
             onComplete = { focusMins, screenMins ->
                 viewModel.completeOnboarding(focusMins, screenMins)
             }
@@ -222,7 +247,6 @@ private fun RegainAppRoot(
                             strictLevel = StrictEnforcementLevel.NONE,
                             selectedGroup = group,
                             extraSelectedPackages = emptySet(),
-                            blockShortsAndReels = true,
                             sessionTag = "Quick Focus",
                             sessionNote = ""
                         )
@@ -232,7 +256,10 @@ private fun RegainAppRoot(
                         viewModel.saveHabit(title, cat, target, 0xFF2EE59D)
                     },
                     onToggleHabitToday = { viewModel.toggleHabitToday(it) },
-                    onArchiveHabit = { viewModel.archiveHabit(it) }
+                    onArchiveHabit = { viewModel.archiveHabit(it) },
+                    onRequestUsageAccess = {
+                        pendingDisclosurePermission = SensitivePermissionType.USAGE_ACCESS
+                    }
                 )
 
                 MainTab.FOCUS -> FocusScreen(
@@ -244,7 +271,8 @@ private fun RegainAppRoot(
                     installedApps = installedApps,
                     enforcementStatus = enforcementStatus,
                     recentSessions = sessions,
-                    onStartSession = { mode, work, shortB, longB, cyc, strict, grp, extra, shorts, tag, note ->
+                    onRequestPermissionWithDisclosure = { pendingDisclosurePermission = it },
+                    onStartSession = { mode, work, shortB, longB, cyc, strict, grp, extra, tag, note ->
                         viewModel.startFocusSession(
                             mode = mode,
                             workMinutes = work,
@@ -254,7 +282,6 @@ private fun RegainAppRoot(
                             strictLevel = strict,
                             selectedGroup = grp,
                             extraSelectedPackages = extra,
-                            blockShortsAndReels = shorts,
                             sessionTag = tag,
                             sessionNote = note
                         )
@@ -282,7 +309,10 @@ private fun RegainAppRoot(
                     },
                     onDeleteLimit = { viewModel.deleteDailyAppLimit(it) },
                     onSaveSchedule = { viewModel.saveSchedule(it) },
-                    onDeleteSchedule = { viewModel.deleteSchedule(it) }
+                    onDeleteSchedule = { viewModel.deleteSchedule(it) },
+                    onRequestUsageAccess = {
+                        pendingDisclosurePermission = SensitivePermissionType.USAGE_ACCESS
+                    }
                 )
 
                 MainTab.STATS -> StatisticsScreen(
@@ -298,6 +328,7 @@ private fun RegainAppRoot(
                     settings = settings,
                     activeSession = activeSession,
                     enforcementStatus = enforcementStatus,
+                    onRequestPermissionWithDisclosure = { pendingDisclosurePermission = it },
                     onUpdateTheme = { viewModel.updateThemeMode(it) },
                     onUpdateSettings = { reqUnlock, transform ->
                         viewModel.updateUserSettings(reqUnlock, transform)

@@ -52,7 +52,6 @@ class FocusEngineAndPolicyTest {
             blockedPackages = setOf("com.instagram.android")
         )
 
-        // User advances Android system clock forward by +5 hours after only 2 minutes of real monotonic time!
         val tamperedWallClock = startWall + (5 * 3_600_000L)
         val realElapsedAfter2Min = startElapsed + (2 * 60_000L)
 
@@ -90,11 +89,10 @@ class FocusEngineAndPolicyTest {
             phaseEndElapsedRealtimeMillis = 5_000_000L,
             strictHardEndWallMillis = startWall + fortyFiveMin,
             strictHardEndElapsedRealtimeMillis = 5_000_000L,
-            strictLevel = StrictEnforcementLevel.DEVICE_OWNER_STRICT,
+            strictLevel = StrictEnforcementLevel.STANDARD_STRICT,
             blockedPackages = setOf("com.google.android.youtube")
         )
 
-        // Device reboots 15 minutes into the 45-minute strict session
         val wallAfterReboot = startWall + (15 * 60_000L)
         val freshBootElapsed = 25_000L
 
@@ -115,7 +113,6 @@ class FocusEngineAndPolicyTest {
             )
         )
 
-        // Once 46 minutes have passed across reboot, session expires cleanly
         val wallExpired = startWall + (46 * 60_000L)
         assertTrue(
             StrictRemainingTimeCalculator.isStrictSessionExpired(
@@ -128,7 +125,7 @@ class FocusEngineAndPolicyTest {
     }
 
     @Test
-    fun `blocker policy blocks target apps across strict breaks and guards system settings`() {
+    fun `blocker policy blocks selected apps across strict breaks and never blocks system settings or play protect`() {
         val bootId = "boot_1"
         val nowWall = 1_700_000_000_000L
         val nowElapsed = 50_000L
@@ -143,15 +140,13 @@ class FocusEngineAndPolicyTest {
             strictHardEndWallMillis = nowWall + 1_800_000L,
             strictHardEndElapsedRealtimeMillis = nowElapsed + 1_800_000L,
             strictLevel = StrictEnforcementLevel.STANDARD_STRICT,
-            blockedPackages = setOf("com.instagram.android"),
-            guardSettings = true
+            blockedPackages = setOf("com.instagram.android", "com.android.settings", "com.android.vending")
         )
 
-        // 1. Blocked app must still be intercepted during Short Break in Strict Mode
+        // 1. Distracting target app is blocked during Strict Mode Short Break
         val igDecision = StrictBlockerPolicyEngine.evaluateForegroundEvent(
             selfPackageName = "com.regainfocus.app",
             foregroundPackage = "com.instagram.android",
-            foregroundClassName = "com.instagram.mainactivity.MainActivity",
             launcherPackages = setOf("com.google.android.apps.nexuslauncher"),
             imePackages = setOf("com.google.android.inputmethod.latin"),
             sessionState = strictDuringBreak,
@@ -162,48 +157,26 @@ class FocusEngineAndPolicyTest {
         )
         assertTrue(igDecision is StrictBlockerPolicyEngine.InterceptionDecision.BlockApp)
 
-        // 2. Emergency Dialer & Home Launcher must ALWAYS be allowed
-        val dialerDecision = StrictBlockerPolicyEngine.evaluateForegroundEvent(
-            selfPackageName = "com.regainfocus.app",
-            foregroundPackage = "com.google.android.dialer",
-            foregroundClassName = null,
-            launcherPackages = setOf("com.google.android.apps.nexuslauncher"),
-            imePackages = emptySet(),
-            sessionState = strictDuringBreak,
-            currentWallMillis = nowWall,
-            currentElapsedRealtimeMillis = nowElapsed,
-            currentBootId = bootId,
-            exceededDailyLimitPackages = setOf("com.google.android.dialer")
-        )
-        assertEquals(StrictBlockerPolicyEngine.InterceptionDecision.Allow, dialerDecision)
-
-        // 3. Dangerous Settings App-Info screen must be guarded during Strict Mode
-        val settingsDecision = StrictBlockerPolicyEngine.evaluateForegroundEvent(
-            selfPackageName = "com.regainfocus.app",
-            foregroundPackage = "com.android.settings",
-            foregroundClassName = "com.android.settings.applications.InstalledAppDetails",
-            launcherPackages = emptySet(),
-            imePackages = emptySet(),
-            sessionState = strictDuringBreak,
-            currentWallMillis = nowWall,
-            currentElapsedRealtimeMillis = nowElapsed,
-            currentBootId = bootId,
-            exceededDailyLimitPackages = emptySet()
-        )
-        assertEquals(
-            StrictBlockerPolicyEngine.InterceptionDecision.BlockApp(
-                "com.android.settings",
-                StrictBlockerPolicyEngine.BlockReason.SETTINGS_SELF_GUARD
-            ),
-            settingsDecision
-        )
-    }
-
-    @Test
-    fun `shorts and reels detector matches short form feed containers`() {
-        assertTrue(StrictBlockerPolicyEngine.isShortFormVideoNodeId("com.google.android.youtube:id/reel_player_page_container"))
-        assertTrue(StrictBlockerPolicyEngine.isShortFormVideoNodeId("com.instagram.android:id/clips_viewer_view_pager"))
-        assertFalse(StrictBlockerPolicyEngine.isShortFormVideoNodeId("com.google.android.youtube:id/watch_player"))
+        // 2. System Settings, Google Play / Play Protect, Permission Controller & Emergency Dialer are NEVER blocked
+        for (protectedPkg in listOf(
+            "com.android.settings",
+            "com.android.vending",
+            "com.google.android.permissioncontroller",
+            "com.google.android.dialer"
+        )) {
+            val decision = StrictBlockerPolicyEngine.evaluateForegroundEvent(
+                selfPackageName = "com.regainfocus.app",
+                foregroundPackage = protectedPkg,
+                launcherPackages = emptySet(),
+                imePackages = emptySet(),
+                sessionState = strictDuringBreak,
+                currentWallMillis = nowWall,
+                currentElapsedRealtimeMillis = nowElapsed,
+                currentBootId = bootId,
+                exceededDailyLimitPackages = setOf(protectedPkg)
+            )
+            assertEquals(StrictBlockerPolicyEngine.InterceptionDecision.Allow, decision)
+        }
     }
 
     @Test
@@ -219,7 +192,6 @@ class FocusEngineAndPolicyTest {
             longBreakDurationMillis = longB,
             totalCycles = 4
         )
-        // 4 * 25 + 3 * 5 + 15 = 130 minutes
         assertEquals(130 * 60_000L, totalStrict)
 
         val step1 = PomodoroPhaseEngine.nextPomodoroPhase(TimerPhase.WORK, 1, 4, work, shortB, longB)
@@ -258,7 +230,7 @@ class FocusEngineAndPolicyTest {
                 endTimeEpochMillis = dayStart + 9_000_000L,
                 plannedWorkSeconds = 5_400L,
                 plannedBreakSeconds = 900L,
-                effectiveWorkSeconds = 5_400L, // 90m/day -> 630m (10.5h) across 7 days
+                effectiveWorkSeconds = 5_400L,
                 effectiveBreakSeconds = 900L,
                 completedCycles = 3,
                 interceptionCount = 4,
@@ -295,6 +267,7 @@ class FocusEngineAndPolicyTest {
     fun `datastore serializers and room converters round trip cleanly`() = runBlocking {
         val settings = UserSettings(
             hasCompletedOnboarding = true,
+            hasAcceptedUsageAccessDisclosure = true,
             themeMode = ThemeMode.AMOLED_DARK,
             dailyFocusGoalMinutes = 180,
             selectedSoundscape = SoundscapeType.RAIN
@@ -306,7 +279,7 @@ class FocusEngineAndPolicyTest {
 
         val session = PersistedTimerSessionState(
             isActive = true,
-            strictLevel = StrictEnforcementLevel.DEVICE_OWNER_STRICT,
+            strictLevel = StrictEnforcementLevel.STANDARD_STRICT,
             blockedPackages = setOf("a.b.c", "x.y.z")
         )
         val outSession = ByteArrayOutputStream()

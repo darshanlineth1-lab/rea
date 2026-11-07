@@ -1,62 +1,51 @@
-# RegainFocus — Focus Timer, Strict App Blocker & Screen-Time Tracker for Android
+# RegainFocus — Open-Source Deep Focus, Screen-Time & Strict App Blocker (`v1.1.0`)
 
-**RegainFocus** (`com.regainfocus.app`) is a complete, 100% local-first, privacy-respecting Android digital-wellbeing and deep-study application built with **Kotlin**, **Jetpack Compose**, **Material 3**, **Room**, **DataStore**, **WorkManager**, **`UsageStatsManager`**, **`AccessibilityService`**, and **`DevicePolicyManager`**.
+`RegainFocus` is a **100% local-first, zero-network, minimum-privilege Android productivity & focus application** built with **Kotlin, Jetpack Compose, Material 3, Room, DataStore, and WorkManager**, grounded in the MIT-licensed [`Focus-Modes-App`](https://github.com/chirag-singh-07/Focus-Modes-App) architecture and hardened for **Google Play Protect Enhanced Fraud Protection (EFP)** and **Google Play User Data / Sensitive Permissions policy compliance**.
 
-Inspired by public productivity workflows in Regain (`ai.regainapp`) and built atop the MIT-licensed open-source foundation [`adnanrangrej/Focus-Modes-App`](https://github.com/adnanrangrej/Focus-Modes-App) (see [`NOTICE_FOUNDATION.md`](NOTICE_FOUNDATION.md)), RegainFocus contains **zero ads, zero cloud accounts, zero paid paywalls, and zero `INTERNET` permission**.
-
----
-
-## Compiled Installable APKs
-
-- **Debug APK (Primary Deliverable)**:
-  - Build output path: `app/build/outputs/apk/debug/app-debug.apk`
-  - Snapshot-persisted path: `apk/app-debug.apk`
-  - SHA-256: `4bc1fc50bd750f061b2d34447cb4461115efc4ab05b71d3d32dc06ff8a5257a1`
-- **Signed Release APK (R8 Optimized)**:
-  - Build output path: `app/build/outputs/apk/release/app-release.apk`
-  - Snapshot-persisted path: `apk/app-release.apk`
-  - SHA-256: `506386f216e249e4dfac1f344935b0cd861acba8fe94946d73c55d7afe81eeb2`
-
-Full research, open-source repository comparison, architecture, security analysis, and limitations are documented in **[`TECHNICAL_REPORT.md`](TECHNICAL_REPORT.md)**.
+See **[`PERMISSION_AUDIT_REPORT.md`](./PERMISSION_AUDIT_REPORT.md)** for the full binary manifest inspection, root-cause investigation of the Google Play Protect EFP block, third-party dependency audit, and Play Store review checklist.
 
 ---
 
-## Implemented Features
+## Direct APK Downloads (`v1.1.0` — Branch `arena/00693eaa-rea`)
 
-1. **Home Dashboard (`HomeScreen.kt`)**:
-   - Live Daily Focus Goal ring, Today's Verified Focus Time, Remaining Target, Current & Best Streak, Completed Sessions count, Today's Real Screen Time vs. Budget bar, One-Tap Quick Focus button, Weekly Productivity Bar Chart, and Interactive Daily Study Habits checklist.
-2. **Focus Timer & DSP Soundscapes (`FocusScreen.kt`, `FocusTimerService.kt`, `AmbientSoundSynthesizer.kt`)**:
-   - **Pomodoro** (custom work/short break/long break/cycles), **Custom Countdown**, and **Stopwatch**.
-   - Monotonic + wall-clock foreground timer with `AlarmManager` exact wakeup fallback — zero drift when minimized or under Doze.
-   - Real-time procedural 16-bit stereo PCM audio synthesizer: **Gentle Rain**, **Ocean Surf**, **Deep Brown Noise**, **Soft White Noise**, and **10 Hz Alpha Binaural Focus**.
-   - Session tags (`Study`, `Coding`, `Exam Prep`, `Reading`, `Writing`, `Deep Work`), notes, and full persistent session history.
-3. **Two-Tier Strict App Blocker (`StrictAppBlockerAccessibilityService.kt`, `StrictBlockShieldActivity.kt`, `DeviceOwnerEnforcementManager.kt`)**:
-   - Custom **Blocking Groups** & individual installed-app multi-select picker, plus **YouTube Shorts / Instagram Reels** short-form feed interception.
-   - **Zero early-exit / pause / skip / unlock controls** during active Strict Mode; mutation locks prevent editing/deleting active groups or settings until `00:00`.
-   - **Anti-Clock-Tamper** monotonic `SystemClock.elapsedRealtime()` tracking within boot sessions + Direct-Boot (`LOCKED_BOOT_COMPLETED` / `BOOT_COMPLETED`) reboot recovery.
-   - **Mode A (Standard Strict Mode)**: Explicit user-consented Accessibility + Foreground Watchdog + Settings Self-Guard + Split-Screen scanning, with transparent pre-activation limitation notice.
-   - **Mode B (Dedicated Device Owner Mode)**: Official `DevicePolicyManager.setPackagesSuspended`, `setUninstallBlocked`, `DISALLOW_APPS_CONTROL`, `DISALLOW_UNINSTALL_APPS`, `DISALLOW_SAFE_BOOT`, and optional Lock Task Kiosk Mode, with automatic restoration when the timer reaches `00:00`.
-4. **Screen-Time Tracker & Per-App Daily Budgets (`AppsScreen.kt`, `InstalledAppsAndUsageRepository.kt`)**:
-   - Real `UsageStatsManager` daily, 7-day, and 30-day totals, 24-hour today activity spark bars, most-used apps list with open counts, Per-App Daily Limits (with optional 24-hour Strict Lock), and Recurring Study Schedules.
-5. **Statistics, Streaks & Achievements (`StatisticsScreen.kt`)**:
-   - 7D/30D Focus Trend charts, Focus vs. Screen-Time dual-bar comparison, Tag distribution bars, 28-Day Streak & Goal Heatmap, and 10 real unlockable Achievements.
-6. **Settings & Local JSON Backup (`SettingsScreen.kt`)**:
-   - 4 Theme modes (**Aurora Dark**, **AMOLED Pitch Black**, **Light Sage**, **System Default**), timer & goal customization, permission status shortcuts, Mode B ADB provisioning helper, notification/reminder controls, and full local JSON Export/Import.
+| Edition | APK Path | Size | Purpose & Permission Profile |
+| :--- | :--- | :---: | :--- |
+| **1. Direct Sideload Release (Recommended for Browser / File-Manager Install)** | [`apk/app-release.apk`](https://raw.githubusercontent.com/darshanlineth1-lab/rea/arena/00693eaa-rea/apk/app-release.apk) | `1.4 MB` | **Zero `BIND_ACCESSIBILITY_SERVICE`**, zero `BIND_DEVICE_ADMIN`, zero `SMS`, zero `NOTIFICATION_LISTENER`, zero `INTERNET`. Uses `UsageStatsManager` (350ms foreground watchdog) + `SYSTEM_ALERT_WINDOW` shield during Focus Sessions so internet sideloading does not trigger Play Protect EFP. |
+| **2. Play Store / ADB Accessibility Release** | [`apk/app-playstore-accessibility-release.apk`](https://raw.githubusercontent.com/darshanlineth1-lab/rea/arena/00693eaa-rea/apk/app-playstore-accessibility-release.apk) | `1.4 MB` | Designed for **Google Play Store distribution** or `adb install`. Uses a policy-hardened `AccessibilityService` (`canRetrieveWindowContent="false"`, `typeWindowStateChanged` only, standalone two-button Prominent Disclosure) without `SYSTEM_ALERT_WINDOW`. *(Note: Direct browser downloads of any APK declaring `BIND_ACCESSIBILITY_SERVICE` are blocked by Play Protect EFP).* |
+| **3. Debug Developer Build (`sideloadDebug`)** | [`apk/app-debug.apk`](https://raw.githubusercontent.com/darshanlineth1-lab/rea/arena/00693eaa-rea/apk/app-debug.apk) | `16 MB` | Unminified debug build of the `sideload` flavor for local development and inspection. |
+
+### SHA-256 Checksums
+* `apk/app-release.apk`: `6daa1f20b5b047a4d45eb7b115d0cb4eb0b6f823150a8b2d61feb2bd100183f8`
+* `apk/app-playstore-accessibility-release.apk`: `d4840e4c5b091082a40fbb89b3975029a498ac38c643c7d4a023957dcc497893`
+* `apk/app-debug.apk`: `001d2dd39477ea4dcd3c91cc521dabddd5bf08c75742584e72152dd49658f639`
 
 ---
 
-## Quick Installation
+## Core Features
+
+1. **Multi-Mode Focus Timer (`FocusTimerService`)**:
+   * **Pomodoro** (configurable Work / Short Break / Long Break / Rounds), **Countdown Timer**, and **Stopwatch**.
+   * Dual-clock persistence (`SystemClock.elapsedRealtime()` + wall-clock epoch + `BOOT_COUNT` anchor) resists manual system-clock jumps and recovers cleanly across reboots.
+2. **Flexible & Strict App Blocking (`StrictBlockerPolicyEngine` + `StrictBlockShieldActivity`)**:
+   * Custom Blocking Groups, per-session app selection, Per-App Daily Screen-Time Budgets, and Recurring Focus Schedules.
+   * **Strict Focus Mode** locks in-app Pause, Skip, Stop, and Group edits until `00:00` while permanently allowlisting Android System Settings, Emergency Dialers, Permission Controller, and Google Play / Play Protect.
+3. **Standalone Prominent Permission Disclosures (`PermissionDisclosureDialogs.kt`)**:
+   * Every sensitive permission (`PACKAGE_USAGE_STATS`, `SYSTEM_ALERT_WINDOW`, or `BIND_ACCESSIBILITY_SERVICE`) is gated behind a standalone two-button disclosure dialog (**"I Agree — Open Settings"** / **"Not Now"**) explaining exact data use and on-device privacy before opening system settings.
+4. **Real Screen-Time Analytics, Study Streaks, Daily Habits & Procedural Soundscapes**:
+   * Live 24-hour / 7-day / 30-day screen-time analytics via `UsageStatsManager`.
+   * Real-time procedural `AudioTrack` synthesis (Gentle Rain, Ocean Surf, Brown Noise, White Noise, 10 Hz Alpha Binaural Tone).
+   * 100% local Room + DataStore persistence with JSON backup export/import and **zero `INTERNET` permission**.
+
+---
+
+## Building & Testing from Source
+
+Requires JDK 17 and Android SDK (`compileSdk 35`, `buildToolsVersion 36.1.0`):
 
 ```bash
-# Install Debug APK over ADB
-adb install -r app/build/outputs/apk/debug/app-debug.apk
+# Run unit tests across both distribution flavors
+./gradlew testSideloadDebugUnitTest testPlaystoreDebugUnitTest
 
-# (Optional) Provision Mode B Device Owner on a dedicated account-free study device
-adb shell dpm set-device-owner com.regainfocus.app/.receiver.FocusDeviceAdminReceiver
-```
-
-## Building & Running Tests
-
-```bash
-./gradlew testDebugUnitTest assembleDebug assembleRelease
+# Build R8-minified, signed release APKs
+./gradlew assembleSideloadRelease assemblePlaystoreRelease
 ```

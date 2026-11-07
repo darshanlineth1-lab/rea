@@ -208,24 +208,30 @@ class InstalledAppsAndUsageRepository(context: Context) {
         return durations to launches
     }
 
-    fun getRecentForegroundPackage(lookbackMillis: Long = 4_000L): Pair<String, String?>? {
+    /**
+     * Accurately resolves the currently-resumed foreground package using UsageEvents over a
+     * rolling lookback window so the `sideload` flavor's foreground service can reliably block
+     * user-selected distracting apps without requiring BIND_ACCESSIBILITY_SERVICE.
+     */
+    fun getRecentForegroundPackage(lookbackMillis: Long = 10 * 60_000L): Pair<String, String?>? {
         if (!hasUsageStatsPermission()) return null
         val usm = appContext.getSystemService(Context.USAGE_STATS_SERVICE) as? UsageStatsManager ?: return null
         val now = System.currentTimeMillis()
         val events = usm.queryEvents(now - lookbackMillis, now) ?: return null
         val event = UsageEvents.Event()
-        var latestPkg: String? = null
-        var latestClass: String? = null
-        var latestTs = 0L
+        var latestResumedPkg: String? = null
+        var latestResumedClass: String? = null
+        var latestResumedTs = 0L
+
         while (events.hasNextEvent()) {
             events.getNextEvent(event)
-            if (event.eventType == UsageEvents.Event.ACTIVITY_RESUMED && event.timeStamp >= latestTs) {
-                latestTs = event.timeStamp
-                latestPkg = event.packageName
-                latestClass = event.className
+            if (event.eventType == UsageEvents.Event.ACTIVITY_RESUMED && event.timeStamp >= latestResumedTs) {
+                latestResumedTs = event.timeStamp
+                latestResumedPkg = event.packageName
+                latestResumedClass = event.className
             }
         }
-        return latestPkg?.let { it to latestClass }
+        return latestResumedPkg?.let { it to latestResumedClass }
     }
 
     suspend fun loadScreenTimeOverview(

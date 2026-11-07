@@ -1,12 +1,8 @@
 package com.regainfocus.app.ui.screens
 
-import android.app.Activity
-import android.content.Intent
-import android.provider.Settings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -27,7 +23,6 @@ import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.Stop
@@ -45,12 +40,10 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,11 +52,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.regainfocus.app.RegainFocusApplication
 import com.regainfocus.app.data.local.BlockingGroupEntity
 import com.regainfocus.app.data.local.FocusSessionEntity
 import com.regainfocus.app.domain.model.DeviceEnforcementStatus
@@ -77,6 +68,7 @@ import com.regainfocus.app.domain.model.TimerPhase
 import com.regainfocus.app.domain.model.UserSettings
 import com.regainfocus.app.ui.components.AppIconBadge
 import com.regainfocus.app.ui.components.AuroraGoalRing
+import com.regainfocus.app.ui.components.SensitivePermissionType
 import com.regainfocus.app.ui.theme.AuroraCyan
 import com.regainfocus.app.ui.theme.AuroraEmerald
 import com.regainfocus.app.ui.theme.StrictCrimson
@@ -100,6 +92,7 @@ fun FocusScreen(
     installedApps: List<InstalledAppInfo>,
     enforcementStatus: DeviceEnforcementStatus,
     recentSessions: List<FocusSessionEntity>,
+    onRequestPermissionWithDisclosure: (SensitivePermissionType) -> Unit,
     onStartSession: (
         mode: TimerModeType,
         workMinutes: Int,
@@ -109,7 +102,6 @@ fun FocusScreen(
         strictLevel: StrictEnforcementLevel,
         selectedGroup: BlockingGroupEntity?,
         extraPackages: Set<String>,
-        blockShortsAndReels: Boolean,
         tag: String,
         note: String
     ) -> Boolean,
@@ -119,15 +111,12 @@ fun FocusScreen(
     onSelectSoundscape: (SoundscapeType) -> Unit,
     onUpdateVolume: (Float) -> Unit
 ) {
-    val context = LocalContext.current
-
     if (activeSession.isActive) {
         ActiveFocusSessionContent(
             settings = settings,
             activeSession = activeSession,
             liveDisplayMillis = liveDisplayMillis,
             liveStrictRemainingMillis = liveStrictRemainingMillis,
-            enforcementStatus = enforcementStatus,
             onTogglePauseFlexible = onTogglePauseFlexible,
             onSkipBreakFlexible = onSkipBreakFlexible,
             onStopFlexible = onStopFlexible,
@@ -137,7 +126,6 @@ fun FocusScreen(
         return
     }
 
-    // Idle Setup State
     var selectedMode by rememberSaveable { mutableStateOf(TimerModeType.POMODORO) }
     var workMinutes by rememberSaveable(settings.pomodoroWorkMinutes, settings.customCountdownMinutes) {
         mutableIntStateOf(settings.pomodoroWorkMinutes)
@@ -152,15 +140,20 @@ fun FocusScreen(
         mutableIntStateOf(settings.pomodoroCyclesBeforeLongBreak)
     }
 
-    var selectedStrictLevel by rememberSaveable(settings.defaultStrictLevel) {
-        mutableStateOf(settings.defaultStrictLevel)
+    var useStrictMode by rememberSaveable {
+        mutableStateOf(settings.defaultStrictLevel != StrictEnforcementLevel.NONE)
     }
+    val selectedStrictLevel = if (useStrictMode) {
+        StrictEnforcementLevel.STANDARD_STRICT
+    } else {
+        StrictEnforcementLevel.NONE
+    }
+
     var selectedGroupId by rememberSaveable(blockingGroups.firstOrNull()?.id) {
         mutableStateOf(blockingGroups.firstOrNull()?.id)
     }
     val selectedGroup = blockingGroups.firstOrNull { it.id == selectedGroupId }
     var extraCustomPackages by remember { mutableStateOf<Set<String>>(emptySet()) }
-    var blockShortsReels by rememberSaveable { mutableStateOf(true) }
     var selectedTag by rememberSaveable { mutableStateOf("Study") }
     var sessionNote by rememberSaveable { mutableStateOf("") }
 
@@ -180,7 +173,6 @@ fun FocusScreen(
             fontWeight = FontWeight.Bold
         )
 
-        // Timer Mode Selector
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -205,7 +197,6 @@ fun FocusScreen(
             }
         }
 
-        // Duration Config Card
         Card(
             shape = RoundedCornerShape(22.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -224,16 +215,14 @@ fun FocusScreen(
                     centerSubtitle = when (selectedMode) {
                         TimerModeType.POMODORO -> "$cycles rounds · ${shortBreakMinutes}m/${longBreakMinutes}m breaks"
                         TimerModeType.COUNTDOWN -> "Countdown Focus"
-                        TimerModeType.STOPWATCH -> if (selectedStrictLevel != StrictEnforcementLevel.NONE) {
-                            "Min ${workMinutes}m Strict Lock"
-                        } else "Open-Ended Stopwatch"
+                        TimerModeType.STOPWATCH -> if (useStrictMode) "Min ${workMinutes}m Strict Lock" else "Open-Ended Stopwatch"
                     },
                     ringSize = 156.dp
                 )
 
                 Spacer(Modifier.height(14.dp))
 
-                if (selectedMode != TimerModeType.STOPWATCH || selectedStrictLevel != StrictEnforcementLevel.NONE) {
+                if (selectedMode != TimerModeType.STOPWATCH || useStrictMode) {
                     val labelText = if (selectedMode == TimerModeType.STOPWATCH) {
                         "Minimum Strict Lock Commitment: ${workMinutes}m"
                     } else {
@@ -289,7 +278,7 @@ fun FocusScreen(
             }
         }
 
-        // Strict Enforcement Mode Card (Highest Priority Feature)
+        // Strict App Blocking Card
         Card(
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -302,25 +291,19 @@ fun FocusScreen(
                     Icon(Icons.Default.Lock, contentDescription = null, tint = AuroraEmerald)
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = "Strict App Blocking Level",
+                        text = "Focus Enforcement Mode",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
 
-                StrictEnforcementLevel.entries.forEach { level ->
-                    val selected = selectedStrictLevel == level
-                    val subtitle = when (level) {
-                        StrictEnforcementLevel.NONE ->
-                            "Blocks selected apps during Work phases; allows pausing or ending early."
-                        StrictEnforcementLevel.STANDARD_STRICT ->
-                            "No pause, no skip, no early exit. Intercepts blocked apps across launcher & reboot until 00:00."
-                        StrictEnforcementLevel.DEVICE_OWNER_STRICT ->
-                            if (enforcementStatus.isDeviceOwnerApp) {
-                                "Provisioned! Suspends blocked packages at OS level + blocks Force-Stop & Uninstall."
-                            } else {
-                                "Requires dedicated ADB Device Owner provisioning (see Settings -> Device Owner)."
-                            }
+                listOf(false, true).forEach { strictOption ->
+                    val selected = useStrictMode == strictOption
+                    val title = if (strictOption) "Strict Focus Mode" else "Flexible Mode"
+                    val subtitle = if (strictOption) {
+                        "No pause, no skip, no early exit. Intercepts blocked apps across launcher & reboot until 00:00."
+                    } else {
+                        "Blocks selected apps during Work phases; allows pausing or ending early."
                     }
                     Surface(
                         shape = RoundedCornerShape(14.dp),
@@ -331,7 +314,7 @@ fun FocusScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { selectedStrictLevel = level }
+                            .clickable { useStrictMode = strictOption }
                     ) {
                         Row(
                             modifier = Modifier.padding(12.dp),
@@ -339,7 +322,7 @@ fun FocusScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = level.title,
+                                    text = title,
                                     style = MaterialTheme.typography.titleSmall,
                                     color = if (selected) AuroraEmerald else MaterialTheme.colorScheme.onSurface
                                 )
@@ -356,17 +339,46 @@ fun FocusScreen(
                     }
                 }
 
-                if (selectedStrictLevel == StrictEnforcementLevel.STANDARD_STRICT &&
-                    !enforcementStatus.isAccessibilityServiceEnabled
-                ) {
-                    OutlinedButton(
-                        onClick = { context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(Icons.Default.WarningAmber, contentDescription = null, tint = WarmAmber)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Enable Accessibility Blocker to Use Mode A")
+                if (useStrictMode && !enforcementStatus.isBlockerReady) {
+                    if (enforcementStatus.supportsAccessibilityBlocker) {
+                        OutlinedButton(
+                            onClick = {
+                                onRequestPermissionWithDisclosure(SensitivePermissionType.ACCESSIBILITY_SHIELD)
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Default.WarningAmber, contentDescription = null, tint = WarmAmber)
+                            Spacer(Modifier.width(8.dp))
+                            Text("Review & Enable Accessibility Shield")
+                        }
+                    } else {
+                        if (!enforcementStatus.hasUsageStatsPermission) {
+                            OutlinedButton(
+                                onClick = {
+                                    onRequestPermissionWithDisclosure(SensitivePermissionType.USAGE_ACCESS)
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.WarningAmber, contentDescription = null, tint = WarmAmber)
+                                Spacer(Modifier.width(8.dp))
+                                Text("Step 1: Grant Usage Access")
+                            }
+                        }
+                        if (!enforcementStatus.canDrawOverlays) {
+                            OutlinedButton(
+                                onClick = {
+                                    onRequestPermissionWithDisclosure(SensitivePermissionType.OVERLAY_SHIELD)
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.WarningAmber, contentDescription = null, tint = WarmAmber)
+                                Spacer(Modifier.width(8.dp))
+                                Text("Step 2: Grant Focus Shield Display")
+                            }
+                        }
                     }
                 }
 
@@ -390,29 +402,15 @@ fun FocusScreen(
                     }
                 }
 
-                Row(
+                OutlinedButton(
+                    onClick = { showCustomAppPicker = true },
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    OutlinedButton(
-                        onClick = { showCustomAppPicker = true },
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text(
-                            if (extraCustomPackages.isEmpty()) "+ Select Individual Apps"
-                            else "+ ${extraCustomPackages.size} Extra Apps Selected"
-                        )
-                    }
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Shorts/Reels", style = MaterialTheme.typography.bodySmall)
-                        Spacer(Modifier.width(6.dp))
-                        Switch(
-                            checked = blockShortsReels,
-                            onCheckedChange = { blockShortsReels = it }
-                        )
-                    }
+                    Text(
+                        if (extraCustomPackages.isEmpty()) "+ Select Individual Installed Apps"
+                        else "+ ${extraCustomPackages.size} Extra Apps Selected"
+                    )
                 }
             }
         }
@@ -458,10 +456,9 @@ fun FocusScreen(
             }
         }
 
-        // Start Focus Button
         Button(
             onClick = {
-                if (selectedStrictLevel != StrictEnforcementLevel.NONE) {
+                if (useStrictMode) {
                     showStrictConfirmationDialog = true
                 } else {
                     onStartSession(
@@ -473,7 +470,6 @@ fun FocusScreen(
                         selectedStrictLevel,
                         selectedGroup,
                         extraCustomPackages,
-                        blockShortsReels,
                         selectedTag,
                         sessionNote
                     )
@@ -484,21 +480,17 @@ fun FocusScreen(
                 .height(58.dp),
             shape = RoundedCornerShape(18.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (selectedStrictLevel != StrictEnforcementLevel.NONE) StrictCrimson else AuroraEmerald,
-                contentColor = if (selectedStrictLevel != StrictEnforcementLevel.NONE) Color.White else Color(0xFF032518)
+                containerColor = if (useStrictMode) StrictCrimson else AuroraEmerald,
+                contentColor = if (useStrictMode) Color.White else Color(0xFF032518)
             )
         ) {
             Icon(
-                imageVector = if (selectedStrictLevel != StrictEnforcementLevel.NONE) Icons.Default.Lock else Icons.Default.PlayArrow,
+                imageVector = if (useStrictMode) Icons.Default.Lock else Icons.Default.PlayArrow,
                 contentDescription = null
             )
             Spacer(Modifier.width(8.dp))
             Text(
-                text = if (selectedStrictLevel != StrictEnforcementLevel.NONE) {
-                    "Activate Strict Focus Session"
-                } else {
-                    "Start Focus Session"
-                },
+                text = if (useStrictMode) "Activate Strict Focus Session" else "Start Focus Session",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -569,13 +561,12 @@ fun FocusScreen(
         Spacer(Modifier.height(12.dp))
     }
 
-    // Transparent Pre-Activation Strict Mode Confirmation Dialog
     if (showStrictConfirmationDialog) {
         val totalBlockedCount = ((selectedGroup?.blockedPackages?.toSet() ?: emptySet()) + extraCustomPackages).size
         AlertDialog(
             onDismissRequest = { showStrictConfirmationDialog = false },
             icon = { Icon(Icons.Default.Lock, contentDescription = null, tint = StrictCrimson) },
-            title = { Text("Confirm ${selectedStrictLevel.title}") },
+            title = { Text("Confirm Strict Focus Mode") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
@@ -583,8 +574,8 @@ fun FocusScreen(
                         style = MaterialTheme.typography.titleSmall
                     )
                     Text(
-                        text = "• Pause, Skip, Stop, and Unlock buttons will be completely disabled until the timer reaches 00:00.\n" +
-                            "• $totalBlockedCount selected apps will be intercepted across Home Launcher, Recents, Split-Screen, and Device Reboots.\n" +
+                        text = "• In-app Pause, Skip, Stop, and Unlock buttons will be completely disabled until the timer reaches 00:00.\n" +
+                            "• $totalBlockedCount selected apps will be intercepted across Home Launcher, Recents, and Device Reboots.\n" +
                             "• Access restores automatically the instant your timer finishes.",
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -593,11 +584,7 @@ fun FocusScreen(
                         color = WarmAmber.copy(alpha = 0.14f)
                     ) {
                         Text(
-                            text = if (selectedStrictLevel == StrictEnforcementLevel.STANDARD_STRICT) {
-                                "Transparency Notice (Mode A): On standard personal Android phones, RegainFocus uses official Accessibility + Foreground Services and guards System Settings, but Android OS always permits determined system-level Force-Stop or permission revocation via deep system menus. For OS-enforced package suspension, use Mode B (Device Owner)."
-                            } else {
-                                "Device Owner Notice (Mode B): Blocked apps will be OS-suspended via DevicePolicyManager and Force-Stop / Uninstall controls will be restricted until the timer reaches 00:00."
-                            },
+                            text = "Platform Transparency Notice: RegainFocus never blocks Android System Settings, emergency dialers, or Play Protect. While in-app cancellation is locked until 00:00, Android OS always retains system-level Force-Stop or permission controls for the device owner.",
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(10.dp)
                         )
@@ -617,7 +604,6 @@ fun FocusScreen(
                             selectedStrictLevel,
                             selectedGroup,
                             extraCustomPackages,
-                            blockShortsReels,
                             selectedTag,
                             sessionNote
                         )
@@ -635,7 +621,6 @@ fun FocusScreen(
         )
     }
 
-    // Individual App Multi-Select Picker Dialog
     if (showCustomAppPicker) {
         var searchQuery by remember { mutableStateOf("") }
         val filtered = remember(installedApps, searchQuery) {
@@ -717,17 +702,12 @@ private fun ActiveFocusSessionContent(
     activeSession: PersistedTimerSessionState,
     liveDisplayMillis: Long,
     liveStrictRemainingMillis: Long,
-    enforcementStatus: DeviceEnforcementStatus,
     onTogglePauseFlexible: () -> Unit,
     onSkipBreakFlexible: () -> Unit,
     onStopFlexible: () -> Unit,
     onSelectSoundscape: (SoundscapeType) -> Unit,
     onUpdateVolume: (Float) -> Unit
 ) {
-    val context = LocalContext.current
-    val activity = context as? Activity
-    val app = context.applicationContext as RegainFocusApplication
-
     val ringProgress = if (activeSession.timerMode == TimerModeType.STOPWATCH) {
         1f
     } else {
@@ -798,7 +778,6 @@ private fun ActiveFocusSessionContent(
             strokeWidth = 16.dp
         )
 
-        // Shield Metrics Row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -850,7 +829,6 @@ private fun ActiveFocusSessionContent(
             }
         }
 
-        // Controls: Strict Mode shows ZERO pause/skip/stop controls!
         if (activeSession.isStrictActive) {
             Card(
                 shape = RoundedCornerShape(18.dp),
@@ -875,26 +853,9 @@ private fun ActiveFocusSessionContent(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
                     )
-
-                    if (activeSession.strictLevel == StrictEnforcementLevel.DEVICE_OWNER_STRICT &&
-                        activeSession.useLockTaskInDeviceOwner &&
-                        activity != null &&
-                        !enforcementStatus.isInLockTaskMode
-                    ) {
-                        Spacer(Modifier.height(6.dp))
-                        OutlinedButton(
-                            onClick = { app.container.deviceOwnerManager.startLockTaskIfPermitted(activity) },
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Icon(Icons.Default.PushPin, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text("Enter Kiosk Lock Task Pinning")
-                        }
-                    }
                 }
             }
         } else {
-            // Flexible Mode Controls
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -942,7 +903,6 @@ private fun ActiveFocusSessionContent(
             }
         }
 
-        // Live Soundscape Switcher Card
         Card(
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),

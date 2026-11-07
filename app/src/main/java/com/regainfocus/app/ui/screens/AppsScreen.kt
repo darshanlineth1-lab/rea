@@ -93,7 +93,8 @@ fun AppsScreen(
     onUpsertLimit: (pkg: String, label: String, mins: Int, enabled: Boolean, lockHours: Int) -> Unit,
     onDeleteLimit: (pkg: String) -> Unit,
     onSaveSchedule: (FocusScheduleEntity) -> Unit,
-    onDeleteSchedule: (FocusScheduleEntity) -> Unit
+    onDeleteSchedule: (FocusScheduleEntity) -> Unit,
+    onRequestUsageAccess: () -> Unit
 ) {
     var selectedSubTab by rememberSaveable { mutableIntStateOf(0) }
     val tabTitles = listOf("Block Groups", "Screen Time", "Schedules")
@@ -143,7 +144,8 @@ fun AppsScreen(
                 appLimits = appLimits,
                 isLoadingUsage = isLoadingUsage,
                 onUpsertLimit = onUpsertLimit,
-                onDeleteLimit = onDeleteLimit
+                onDeleteLimit = onDeleteLimit,
+                onRequestUsageAccess = onRequestUsageAccess
             )
             2 -> SchedulesTab(
                 schedules = schedules,
@@ -231,8 +233,7 @@ private fun BlockingGroupsTab(
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Text(
-                                    text = "${group.blockedPackages.size} apps · ${group.defaultDurationMinutes}m default" +
-                                        if (group.blockShortsAndReels) " · Shorts/Reels blocked" else "",
+                                    text = "${group.blockedPackages.size} apps · ${group.defaultDurationMinutes}m default",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -347,17 +348,10 @@ private fun GroupEditorDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("Default Duration: ${duration.roundToInt()}m", style = MaterialTheme.typography.labelLarge)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Shorts/Reels", style = MaterialTheme.typography.labelMedium)
-                        Switch(checked = blockShorts, onCheckedChange = { blockShorts = it })
-                    }
-                }
+                Text(
+                    "Default Duration: ${duration.roundToInt()}m",
+                    style = MaterialTheme.typography.labelLarge
+                )
                 Slider(
                     value = duration,
                     onValueChange = { duration = ((it / 5f).roundToInt() * 5).toFloat() },
@@ -454,9 +448,9 @@ private fun ScreenTimeAndLimitsTab(
     appLimits: List<AppDailyLimitEntity>,
     isLoadingUsage: Boolean,
     onUpsertLimit: (pkg: String, label: String, mins: Int, enabled: Boolean, lockHours: Int) -> Unit,
-    onDeleteLimit: (pkg: String) -> Unit
+    onDeleteLimit: (pkg: String) -> Unit,
+    onRequestUsageAccess: () -> Unit
 ) {
-    val context = LocalContext.current
     var rangeIndex by rememberSaveable { mutableIntStateOf(0) } // 0 = Today, 1 = 7 Days, 2 = 30 Days
     var limitDialogTarget by remember { mutableStateOf<Pair<String, String>?>(null) }
     var showAddAnyLimitPicker by remember { mutableStateOf(false) }
@@ -488,13 +482,13 @@ private fun ScreenTimeAndLimitsTab(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Button(
-                        onClick = { context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) },
+                        onClick = onRequestUsageAccess,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = AuroraCyan,
                             contentColor = Color(0xFF042230)
                         )
                     ) {
-                        Text("Open Usage Access Settings", fontWeight = FontWeight.Bold)
+                        Text("Review & Grant Usage Access", fontWeight = FontWeight.Bold)
                     }
                 }
             }
