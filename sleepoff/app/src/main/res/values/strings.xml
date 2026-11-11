@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SleepOff</string>
+    <string name="app_tagline">Smart Bluetooth Sleep Timer</string>
+    <string name="notification_listener_label">SleepOff media control</string>
+    <string name="accessibility_service_label">SleepOff Bluetooth helper</string>
+
+    <!-- Home -->
+    <string name="home_title">SleepOff</string>
+    <string name="home_subtitle">Smart Bluetooth Sleep Timer</string>
+    <string name="bluetooth_on">Bluetooth is on</string>
+    <string name="bluetooth_off">Bluetooth is off</string>
+    <string name="bluetooth_unknown">Bluetooth status unknown</string>
+    <string name="no_device_connected">No audio device connected</string>
+    <string name="device_connected">Connected: %1$s</string>
+    <string name="devices_connected">Connected: %1$s +%2$d more</string>
+    <string name="refresh">Refresh</string>
+    <string name="idle_label">Ready to sleep</string>
+    <string name="running_label">Music stops in</string>
+    <string name="paused_label">Paused</string>
+    <string name="ends_at">Stops at %1$s</string>
+    <string name="start_timer">Start Timer</string>
+    <string name="pause">Pause</string>
+    <string name="resume">Resume</string>
+    <string name="cancel">Cancel</string>
+    <string name="cancel_confirm_title">Cancel timer?</string>
+    <string name="cancel_confirm_message">The sleep timer will be cancelled and music will keep playing.</string>
+    <string name="extend_by">Extend</string>
+    <string name="customize">Customize</string>
+    <string name="shutdown_mode">Shutdown mode</string>
+    <string name="battery_saver_card_title">Battery saving</string>
+    <string name="battery_saver_card_body">SleepOff uses an exact alarm and a low-impact foreground service, so it works with the screen off and in Doze mode without draining the battery.</string>
+    <string name="open_setup">Open setup</string>
+    <string name="last_completion">Last run: %1$s</string>
+
+    <!-- Modes -->
+    <string name="mode_music_only">Music Only</string>
+    <string name="mode_music_only_desc">Pause music, keep Bluetooth on</string>
+    <string name="mode_music_bt">Music + Bluetooth</string>
+    <string name="mode_music_bt_desc">Pause music, then turn Bluetooth off</string>
+    <string name="mode_bt_only">Bluetooth Only</string>
+    <string name="mode_bt_only_desc">Turn Bluetooth off, keep music playing</string>
+    <string name="mode_gentle">Gentle Shutdown</string>
+    <string name="mode_gentle_desc">Fade volume over the final minutes, pause, then Bluetooth off</string>
+
+    <!-- Configure -->
+    <string name="configure_title">Timer Configuration</string>
+    <string name="custom_duration">Custom duration</string>
+    <string name="hours">Hours</string>
+    <string name="minutes">Minutes</string>
+    <string name="use_duration">Use this duration</string>
+    <string name="bt_delay">Delay before Bluetooth off</string>
+    <string name="bt_delay_desc">Wait this long after pausing music before turning Bluetooth off (seconds).</string>
+    <string name="fade_duration">Gentle fade duration</string>
+    <string name="fade_duration_desc">Volume fades over the final minutes in Gentle mode.</string>
+    <string name="restore_volume">Restore volume after pause</string>
+    <string name="restore_volume_desc">Bring media volume back to its original level after the timer fires.</string>
+    <string name="battery_saver">Battery saver mode</string>
+    <string name="battery_saver_desc">Uses inexact alarms and slower notification updates to save power. The timer may fire a little late in deep Doze.</string>
+    <string name="saved">Saved</string>
+    <string name="seconds_short">%1$d s</string>
+    <string name="minutes_short">%1$d min</string>
+
+    <!-- Schedule -->
+    <string name="schedule_title">Sleep Schedule</string>
+    <string name="schedule_enabled">Daily schedule</string>
+    <string name="schedule_enabled_desc">Start a sleep timer automatically every day at the chosen time.</string>
+    <string name="schedule_time">Start time</string>
+    <string name="schedule_duration">Timer duration</string>
+    <string name="schedule_mode">Shutdown mode</string>
+    <string name="schedule_next">Next run: %1$s</string>
+    <string name="schedule_off">Schedule is off</string>
+    <string name="ok">OK</string>
+
+    <!-- History -->
+    <string name="history_title">Timer History</string>
+    <string name="history_empty">No completed timers yet.</string>
+    <string name="history_empty_desc">Finished timers will appear here.</string>
+    <string name="clear_history">Clear history</string>
+    <string name="clear_history_confirm">Clear all timer history?</string>
+    <string name="outcome_music_paused">Music paused</string>
+    <string name="outcome_music_untouched">Music kept playing</string>
+    <string name="outcome_bt_off">Bluetooth turned off</string>
+    <string name="outcome_bt_not_off">Bluetooth still on</string>
+    <string name="outcome_bt_not_requested">Bluetooth untouched</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_media_session">Media session control</string>
+    <string name="settings_media_session_desc">Optional. Lets SleepOff pause the exact active player via MediaSession. Without it, SleepOff sends a standard media pause key, which works with Spotify, YouTube Music, VLC and most players.</string>
+    <string name="settings_bt_helper">Bluetooth auto-toggle helper</string>
+    <string name="settings_bt_helper_desc">Optional. On Android 13+, apps cannot turn Bluetooth off directly. This user-authorized helper opens Bluetooth settings at timer end and taps the toggle for you.</string>
+    <string name="settings_battery">Battery optimization</string>
+    <string name="settings_battery_desc">Exempt SleepOff from battery optimization so the timer is not killed overnight.</string>
+    <string name="settings_exact_alarm">Exact alarms</string>
+    <string name="settings_exact_alarm_desc">Allow SleepOff to fire the timer at the exact minute, even in Doze mode.</string>
+    <string name="settings_about">About</string>
+    <string name="settings_about_body">SleepOff 1.0.0\nNo ads. No tracking. No account. No internet access.</string>
+    <string name="granted">Granted</string>
+    <string name="not_granted">Not granted</string>
+    <string name="enabled">Enabled</string>
+    <string name="disabled">Disabled</string>
+    <string name="open_settings">Open settings</string>
+    <string name="allow">Allow</string>
+
+    <!-- Setup -->
+    <string name="setup_title">Permissions &amp; Setup</string>
+    <string name="setup_intro">SleepOff needs a few permissions to work reliably overnight. Each one has a clear purpose — nothing is requested without a reason.</string>
+    <string name="setup_bt_connect">Bluetooth connection</string>
+    <string name="setup_bt_connect_desc">Shows the name of your connected headphones or speaker. Android 12+ requires this to read connected devices.</string>
+    <string name="setup_notifications">Notifications</string>
+    <string name="setup_notifications_desc">Shows the countdown and the completion message. Required on Android 13+.</string>
+    <string name="setup_exact_alarm">Exact alarm</string>
+    <string name="setup_exact_alarm_desc">Fires the timer at the exact time, even while the phone is in Doze (deep sleep).</string>
+    <string name="setup_battery">Battery optimization exemption</string>
+    <string name="setup_battery_desc">Prevents the system from killing SleepOff overnight. Strongly recommended.</string>
+    <string name="setup_listener">Media session access (optional)</string>
+    <string name="setup_listener_desc">Optional. Grants access to the active media session for a more reliable pause. The standard media-key pause works without it.</string>
+    <string name="setup_accessibility">Bluetooth auto-toggle helper (optional)</string>
+    <string name="setup_accessibility_desc">Optional. On Android 13+, only this kind of user-authorized automation can turn Bluetooth off for you. SleepOff never hides this limitation.</string>
+    <string name="setup_bt_note_title">About Bluetooth on Android 13+</string>
+    <string name="setup_bt_note_body">Since Android 13 (API 33), Google removed the ability for third-party apps to turn Bluetooth off directly (BluetoothAdapter.disable() is deprecated and requires a system-only permission). SleepOff handles this honestly:\n\n• On Android 12 and older, Bluetooth is switched off directly when permitted.\n• On Android 13+, SleepOff pauses your music, then shows a notification with a one-tap shortcut to Bluetooth settings — or, if you enable the optional helper above, taps the toggle for you.\n• SleepOff always reports what actually happened. It never claims Bluetooth is off when it is not.</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_timer">Sleep timer</string>
+    <string name="notif_channel_completion">Timer finished</string>
+    <string name="notif_countdown_title">SleepOff timer</string>
+    <string name="notif_countdown_body">Music stops in %1$s • Ends %2$s</string>
+    <string name="notif_paused_body">Timer paused • %1$s remaining</string>
+    <string name="notif_completion_title">Sleep timer finished</string>
+    <string name="notif_completion_music_paused">Music paused.</string>
+    <string name="notif_completion_music_kept">Music kept playing (Bluetooth Only mode).</string>
+    <string name="notif_completion_bt_off">Bluetooth turned off.</string>
+    <string name="notif_completion_bt_failed">Bluetooth could not be turned off automatically. Tap below to open Bluetooth settings.</string>
+    <string name="notif_completion_bt_kept">Bluetooth left on.</string>
+    <string name="notif_open_app">Open SleepOff</string>
+    <string name="notif_open_bt_settings">Bluetooth settings</string>
+    <string name="notif_finish_now">Finish now</string>
+    <string name="notif_finish_now_body">Your sleep timer finished while the phone was off. Tap to apply it now.</string>
+
+    <!-- Accessibility service -->
+    <string name="accessibility_service_description">SleepOff Bluetooth helper. When the sleep timer ends, this helper opens Bluetooth settings and taps the Bluetooth toggle to turn it off. It only acts when a timer has just finished.</string>
+</resources>

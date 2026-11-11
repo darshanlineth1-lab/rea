@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Bluetooth: status + connected-device detection (no scanning). -->
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <!-- Runtime permission on Android 12+; we only read connection state,
+         never scan, hence neverForLocation. -->
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_CONNECT"
+        android:usesPermissionFlags="neverForLocation" />
+
+    <!-- Foreground service that shows the countdown notification and runs
+         the completion sequence (pause media, optional Bluetooth off). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- FOREGROUND_SERVICE_MEDIA_PLAYBACK is required on Android 14 (API 34+);
+         declaring it on older SDKs is harmless. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+
+    <!-- Countdown / completion notifications (runtime on Android 13+). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Exact alarm so the timer fires on time even in Doze mode.
+         Requested at runtime via Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
+    <!-- Reschedule the timer / daily schedule after a reboot. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- Keep the CPU awake briefly while the completion sequence runs. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- Short vibration when the timer completes. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- Deliberately NO android.permission.INTERNET: SleepOff works fully offline. -->
+
+    <application
+        android:name=".SleepOffApplication"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.SleepOff"
+        tools:targetApi="34">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.SleepOff"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Countdown + completion foreground service. -->
+        <service
+            android:name=".timer.TimerService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+
+        <!-- Fired by AlarmManager at the exact deadline (survives process death). -->
+        <receiver
+            android:name=".timer.TimerAlarmReceiver"
+            android:exported="false" />
+
+        <!-- Reschedules alarms after reboot / app update. -->
+        <receiver
+            android:name=".timer.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Optional: enables MediaSession-based pause (user grants notification
+             listener access in Setup). Not required for core functionality. -->
+        <service
+            android:name=".media.SleepOffNotificationListener"
+            android:exported="false"
+            android:label="@string/notification_listener_label"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+        <!-- Optional: user-authorized helper that taps the Bluetooth toggle in
+             Settings on Android 13+ (where direct disabling is blocked). -->
+        <service
+            android:name=".bluetooth.BluetoothToggleAccessibilityService"
+            android:exported="false"
+            android:label="@string/accessibility_service_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+    </application>
+</manifest>
